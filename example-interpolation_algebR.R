@@ -5,7 +5,7 @@ library(gstat)
 # install.packages("devtools")
 # devtools::install_github("edzer/mss")
 library(mss)
-library("Rgraphviz")
+
 #----------------------------------------------------
 
 rm(list=ls())
@@ -64,15 +64,20 @@ zincPointData = SField(meuse["lzinc"], meuse.area)
 
 
 interpolator = getInterpolator(modelSemivariogram(zincPointData), zincPointData)
-class(interpolator) # untyped, but is S -> Q
+#class(interpolator) # untyped, but is S -> Q
 
 locInterest = SField(geometry(meuse.grid), geometry(meuse.grid), cellsArePoints = TRUE)
 intZincPointData = interpolator(locInterest)
 #class(intZincPointData)
-spplot(intZincPointData@observations[1])
+#spplot(intZincPointData@observations[1])
 
 
 ## Create / visualize graph
 algebr$disableProvenance()
 gRlayout = algebr$getScriptGraph()
 plot(gRlayout, main="Derivation Graph")
+
+setwd("output")
+toFile(gRlayout , layoutType="dot", filename="interpolation.dot", fileType="dot")
+toFile(gRlayout , layoutType="dot", filename="interpolation.svg", fileType="svg")
+setwd("../")

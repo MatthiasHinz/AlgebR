@@ -1,4 +1,7 @@
 #library(stringr)
+library("Rgraphviz")
+library(CodeDepends)
+library(codetools)
 
 algebr = new.env()
 
@@ -10,7 +13,8 @@ algebr = new.env()
 #initiates a new graph opject for recording
 algebr$newDerivationGraph <-function(){
   g = list(V = c(), E = list(), eAttrs=list(), nAttrs=list(), attrs=list(), fCalls=list())
-  g$attrs <- list(node=list(shape="ellipse", fixedsize=FALSE, fillcolor="white", style="filled"))
+  g$attrs <- list(node=list(shape="ellipse", fixedsize=FALSE, fillcolor="white", style="filled"),
+                  edge=list(style="solid"))
   return(g)
 }
 
@@ -34,7 +38,11 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
       isFirstCall <<- FALSE
       return(TRUE)
     }
+    
     algebr=data
+    # actually parsing the last executed expression to a graph:
+    algebr$scriptGraph=algebr$parseCommand(expr,algebr$scriptGraph, first_call = TRUE)
+    
     algebr$history_list = append(algebr$history_list, expr)
     #cat(as.character(as.expression(expr)))
     new_ls = ls(envir = globalenv())
@@ -48,12 +56,18 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
     
     info = scriptInfo(readScript(txt=as.character(as.expression(expr))))
     side_effects = new_vars[!new_vars %in% info[[1]]@outputs]
-    if(length(side_effects)>0)
-    warning(paste("These variables have been initialized from side-efects of the previous task: ", paste(side_effects, collapse = " ")))
-    #look
+    if(length(side_effects)>0){
+      cmd_id = algebr$scriptGraph$first_call
+      sapply(side_effects, function(variable){
+        algebr$scriptGraph <<- algebr$addNodeObject(var = variable, g = algebr$scriptGraph)
+        algebr$scriptGraph <<- algebr$addEdgeOutput(output =  variable,cmd = cmd_id,g = algebr$scriptGraph, hidden = TRUE)
+      }
+        
+      )
+      warning(paste("These variables have been initialized from side-efects of the previous task: ", paste(side_effects, collapse = " ")))
+    }#look
     
-    # actually parsing the last executed expression to a graph:
-    algebr$scriptGraph=algebr$parseCommand(expr,algebr$scriptGraph)
+
     
     algebr$last_ls = new_ls
     return(TRUE)
@@ -126,33 +140,49 @@ algebr$addNodeObject <- function(var, g) {
 }
 
 
-algebr$addEdgeOutput <- function(output, cmd, g) {
+algebr$addEdgeOutput <- function(output, cmd, g, hidden=FALSE) {
   if(all(g$E[[cmd]]$edges != output)){
     g$E[[cmd]]$edges = append(g$E[[cmd]]$edges, output)
     g$E[[cmd]]$weights = append(g$E[[cmd]]$weights, 1)
     g$eAttrs$color[[paste0(cmd, "~", output)]] = "red"
+    if(hidden)
+      g$eAttrs$style[[paste0(cmd, "~", output)]] = "dashed"
   }
   return(g)
 }
 
-algebr$addEdgeInput <- function(input, cmd, g, label=NULL){
+algebr$addEdgeInput <- function(input, cmd, g, label=NULL, hidden=FALSE){
   if(all(g$E[[input]]$edges != cmd)){
     g$E[[input]]$edges = append(g$E[[input]]$edges, cmd)
     g$E[[input]]$weights = append(g$E[[input]]$weights, 1)
     if(!is.null(label)){
       g$eAttrs$label[[paste0(input,"~",cmd)]] =label
     }
+    
+    if(hidden)
+      g$eAttrs$style[[paste0(input, "~", cmd)]] = "dashed"
   }else
     warning(paste("AlgebR: Dublicate edge from", input,"to",cmd,"! Second edge (and posdibly the label) will not display in derivation graph."))
   return(g)
 }
 
 
+algebr$addEdgeFunctionCall <- function(fun_id, call_id, g, hidden=FALSE){
+  if(all(g$E[[fun_id]]$edges != call_id)){
+    g$E[[fun_id]]$edges = append(g$E[[fun_id]]$edges, call_id)
+    g$E[[fun_id]]$weights = append(g$E[[fun_id]]$weights, 1)
+    g$eAttrs$color[[paste0(fun_id, "~", call_id)]] = "blue"
+    if(hidden){
+      g$eAttrs$style[[paste0(fun_id, "~", call_id)]] = "dashed"
+    }
+  }
+  return(g)
+}
 
 
-
-algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eAttrs=list(), nAttrs=list(), chunks=list(), last_vt=NULL)){
-  g$first_call = NULL
+algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eAttrs=list(), nAttrs=list(), chunks=list(), last_vt=NULL), first_call=FALSE){
+  if(first_call)
+    g$first_call = NULL
   
   #print(paste(as.character(as.expression(cmd)), class(cmd)))
   cmd_id = NULL
@@ -164,7 +194,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
   }else if(any(sapply(list(is.numeric, is.symbol, is.character, is.logical), function(x){x(cmd)}))){
     #print("---------------------")
     #print(paste0("found literal: ",cmd))
-   # print("---------------------")
+    # print("---------------------")
     cmd_id=as.character(as.integer(runif(1)*1000))
     g$nAttrs$label[[cmd_id]]=as.character(cmd)
     g$V = append(g$V, cmd_id)
@@ -211,14 +241,14 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       }
       
       selout=parseSelection(cmd)
-     # print(paste("OUT:", selout$parent, selout$selection))
+      # print(paste("OUT:", selout$parent, selout$selection))
       g=algebr$parseCommand(selout$parent,g)
       parent = g$last_vt
       
       g=algebr$parseCommand(as.name(selout$selection),g)
       query = g$last_vt
       
-     # print(paste(parent, selout$selection," <- create selection"))
+      # print(paste(parent, selout$selection," <- create selection"))
       g=algebr$addEdgeInput(parent, query, g)
       cmd_id=g$last_vt
       #-------------------
@@ -241,7 +271,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       if(eval(call("is.function", cmd[[1]]))){
         cmd_id=as.character(as.integer(runif(1)*1000))
         label=as.character(as.expression(cmd[[1]]))
-       # print(paste("label: ",label))
+        # print(paste("label: ",label))
         g$fCalls[[cmd_id]]=label
         fdef=eval(cmd[[1]])
         if(!is.primitive(fdef))
@@ -258,7 +288,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
         
         if(length(cmd)>1)
           for(i in 2:length(cmd)){
-           # print(paste("cmd:",cmd, length(cmd)))
+            # print(paste("cmd:",cmd, length(cmd)))
             arg=cmd[[i]]
             #------------------------------------
             g = algebr$parseCommand(arg, g)
@@ -266,25 +296,35 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
             label=names(cmd[i])
             g=algebr$addEdgeInput(g$last_vt, cmd_id, g, label)
           }
-        
+
+        #print(paste("findglobals...", cmd[[1]]))        
+        if(!is.primitive(get(as.character(as.expression(cmd[[1]]))))){
+          globals = eval(call("findGlobals", get(as.character(as.expression(cmd[[1]]))), merge=FALSE))
+          ##TODO: expore function references to other packages
+          
+          ls_func = globals$functions[globals$functions %in% ls(envir = globalenv())]
+          if(length(ls_func)>0)
+            sapply(ls_func, function(x){
+              g <<- algebr$addEdgeFunctionCall(fun_id = x,call_id = cmd_id,g = g, hidden = TRUE)
+            })
+          ls_vars = globals$variables[globals$variables %in% ls(envir = globalenv())]
+          if(length(ls_vars)>0)
+            sapply(ls_vars, function(x){
+              #TODO: detect (with scriptInfo of CodeDepends ?) if global variable is updated
+              g <<- algebr$addEdgeInput(input = x, cmd = call_id, g=g, hidden=TRUE)
+            })}
       }
-    
     #for all calls:
     for(V in g$V){
-        cmd_ids = as.character(cmd_id)
-        call_label=g$fCalls[[cmd_ids]]
-        if(!is.null(call_label) && V==call_label){
-
-          if(all(g$E[[V]]$edges != cmd_ids)){
-            g$E[[V]]$edges = append(g$E[[V]]$edges, cmd_ids)
-            g$E[[V]]$weights = append(g$E[[V]]$weights, 1)
-            g$eAttrs$color[[paste0(V, "~", cmd_ids)]] = "blue"
-          }
+      cmd_ids = as.character(cmd_id)
+      call_label=g$fCalls[[cmd_ids]]
+      if(!is.null(call_label) && V==call_label){
+        g=algebr$addEdgeFunctionCall(V, cmd_ids, g)
       }
-      
     }
     
-    g$first_call=cmd_id
+    if(is.null(g$first_call))
+      g$first_call=cmd_id
   }
   
   
