@@ -14,7 +14,7 @@ algebr = new.env()
 algebr$newDerivationGraph <-function(){
   g = list(V = c(), E = list(), eAttrs=list(), nAttrs=list(), attrs=list(), fCalls=list())
   g$attrs <- list(node=list(shape="ellipse", fixedsize=FALSE, fillcolor="white", style="filled"),
-                  edge=list(style="solid"))
+                  edge=list(style="solid", arrowhead="normal"))
   return(g)
 }
 
@@ -38,17 +38,16 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
       isFirstCall <<- FALSE
       return(TRUE)
     }
-    
     algebr=data
-    # actually parsing the last executed expression to a graph:
-    algebr$scriptGraph=algebr$parseCommand(expr,algebr$scriptGraph, first_call = TRUE)
-    
+    #------------------------------------------------------------------------------------
+    # Collect provenance information from workspace changes that may be used for parsing
+    #------------------------------------------------------------------------------------
     algebr$history_list = append(algebr$history_list, expr)
     #cat(as.character(as.expression(expr)))
-    new_ls = ls(envir = globalenv())
+    algebr$new_ls = ls(envir = globalenv())
     
     #notify and track new variables
-    new_vars = new_ls[!new_ls %in% algebr$last_ls]
+    new_vars = algebr$new_ls[!algebr$new_ls %in% algebr$last_ls]
     if(length(new_vars)>0)
       cat(paste("The following variables have been initialized: ", paste(new_vars, collapse = " ")))
     
@@ -56,6 +55,16 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
     
     info = scriptInfo(readScript(txt=as.character(as.expression(expr))))
     side_effects = new_vars[!new_vars %in% info[[1]]@outputs]
+    
+    
+    #------------------------------------------------------------------------------------
+    # Parse available provenance information to enhance the derivation graph
+    #------------------------------------------------------------------------------------
+    
+    # actually parsing the last executed expression to a graph:
+    algebr$scriptGraph=algebr$parseCommand(expr,algebr$scriptGraph, first_call = TRUE)
+    
+
     if(length(side_effects)>0){
       cmd_id = algebr$scriptGraph$first_call
       sapply(side_effects, function(variable){
@@ -64,12 +73,13 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
       }
         
       )
-      warning(paste("These variables have been initialized from side-efects of the previous task: ", paste(side_effects, collapse = " ")))
+    # warning(paste("These variables have been initialized from side-efects of the previous task: ", paste(side_effects, collapse = " ")))
     }#look
-    
+    #-----------------------------------------------------------------------------------
 
-    
-    algebr$last_ls = new_ls
+    # Be aware that the last_ls variable is overwritten IN THE END of the callback, but may be used during parsing from various methods
+    # So please don't move it!
+    algebr$last_ls = algebr$new_ls
     return(TRUE)
   }
 }
@@ -129,14 +139,45 @@ algebr$reset <-function(){
 # Functions for creating a derivation graphs
 ####
 
-algebr$addNodeObject <- function(var, g) {
-  var = as.character(as.expression(var))
-  if (all(g$V != var)){
-    g$V = append(g$V, var)
-    g$E[[var]]=list(edges=c(), weights=c())
+algebr$addNode = function(node_id, g, label=NULL, color=NULL, shape=NULL){
+  node_id = as.character(as.expression(node_id))
+  if (all(g$V != node_id)){
+    g$V = append(g$V, node_id)
+    g$E[[node_id]]=list(edges=c(), weights=c())
   }
-  g$last_vt=var
-  g
+  
+  if(!is.null(label))
+    g$nAttrs$label[[node_id]]=label
+  
+  g$last_vt=node_id
+  return(g)
+}
+
+
+algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE) {
+  var = as.character(as.expression(var))#ensure that variable name is a string
+  if(isInput && isOutput)
+    #normally never happens...
+    warning(paste0("Algebr: The variable \"",var,"\" was classified as Input AND output. The resulting derivation graph may be flawed."))
+  
+  if(isInput){
+    #verify that object existed before the last task was executed
+    #if not, it shall be treaded as a litteral, e.g. value of class 'symbol' or 'expression'
+    #IMPORTANT: this test is heuristic, because the workspace cannot (yet?) really be examined before execution
+    # -- so there might be cases of missclassification as literal
+    
+    #if-clause assumes that the previously executed task did not add variables to any parent environment
+    if(!var %in% algebr$last_ls && !exists(var, envir = parent.env(globalenv()))){
+        return(algebr$addNodeLiteral(label = var, g))
+    }
+  }else if(isOutput){
+    #for outputs, its sufficient to check if objects exists in current workspace
+    if(!var %in% algebr$new_ls && !exists(var, envir = parent.env(globalenv()))){
+      return(algebr$addNodeLiteral(label = var, g))
+    }
+  }
+  g=algebr$addNode(var,g)
+  return(g)
 }
 
 
@@ -158,11 +199,13 @@ algebr$addEdgeInput <- function(input, cmd, g, label=NULL, hidden=FALSE){
     if(!is.null(label)){
       g$eAttrs$label[[paste0(input,"~",cmd)]] =label
     }
+    g$eAttrs$arrowhead[[paste0(input, "~", cmd)]] = "onormal"
     
     if(hidden)
       g$eAttrs$style[[paste0(input, "~", cmd)]] = "dashed"
   }else
     warning(paste("AlgebR: Dublicate edge from", input,"to",cmd,"! Second edge (and posdibly the label) will not display in derivation graph."))
+    g$last_vt = input
   return(g)
 }
 
@@ -180,7 +223,16 @@ algebr$addEdgeFunctionCall <- function(fun_id, call_id, g, hidden=FALSE){
 }
 
 
-algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eAttrs=list(), nAttrs=list(), chunks=list(), last_vt=NULL), first_call=FALSE){
+algebr$addNodeLiteral = function(label, g){
+  vt_id=as.character(as.integer(runif(1)*1000)) #generates a random id for the node to be unique
+  g=algebr$addNode(node = vt_id, g = g,label = label)
+  
+  
+  return(g)
+  #g$V = append(g$V, cmd_id)
+}
+
+algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eAttrs=list(), nAttrs=list(), chunks=list(), last_vt=NULL), first_call=FALSE, isInput=FALSE, isOutput=FALSE){
   if(first_call)
     g$first_call = NULL
   
@@ -188,24 +240,23 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
   cmd_id = NULL
   #CASE 1: cmd is some kind of variable
   if(is.name(cmd)){
-    g=algebr$addNodeObject(cmd, g)
+    g=algebr$addNodeObject(cmd, g, isInput= isInput, isOutput=isOutput)
     cmd_id=g$last_vt
     #CASE 2: cmd is some kind of literal
   }else if(any(sapply(list(is.numeric, is.symbol, is.character, is.logical), function(x){x(cmd)}))){
     #print("---------------------")
     #print(paste0("found literal: ",cmd))
     # print("---------------------")
-    cmd_id=as.character(as.integer(runif(1)*1000))
-    g$nAttrs$label[[cmd_id]]=as.character(cmd)
-    g$V = append(g$V, cmd_id)
+    g=algebr$addNodeLiteral(as.character(as.expression(cmd)), g)
+    cmd_id=g$last_vt
     #CASE 2: cmd is an assignment (TODO: handle operators like ->, <<- ...)
   }else if(any(class(cmd) ==c("=", "<-"))){
     # handle left-hand side of assignmet
     #print(paste("something wrong? - sould be an assignment",as.character(as.expression(cmd))))
-    g = algebr$parseCommand(cmd[[2]], g)
+    g = algebr$parseCommand(cmd[[2]], g, isOutput=TRUE)
     output_id=g$last_vt
     #---- Parses right-hand side of the assignment:
-    g = algebr$parseCommand(cmd[[3]], g)
+    g = algebr$parseCommand(cmd[[3]], g, isInput=TRUE)
     #--------------------------------------------------------------
     cmd_id = g$last_vt
     g=algebr$addEdgeOutput(output = output_id, cmd = cmd_id, g)
@@ -242,15 +293,15 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       
       selout=parseSelection(cmd)
       # print(paste("OUT:", selout$parent, selout$selection))
-      g=algebr$parseCommand(selout$parent,g)
+      g=algebr$parseCommand(selout$parent,g, isInput = TRUE, isOutput = FALSE)
       parent = g$last_vt
       
-      g=algebr$parseCommand(as.name(selout$selection),g)
+      g=algebr$parseCommand(as.name(selout$selection),g, isInput = FALSE, isOutput = FALSE) ##TODO not so clear how to handel isInput/isOutput flags here (may lead to misclassification in addNodeObject currently)
       query = g$last_vt
-      
+      cmd_id=g$last_vt
       # print(paste(parent, selout$selection," <- create selection"))
       g=algebr$addEdgeInput(parent, query, g)
-      cmd_id=g$last_vt
+      
       #-------------------
     }else if(any(cmd[[1]]==c("log","sin","cos"))&& (is.character(cmd[[2]]) || is.numeric(cmd[[2]]))){
       g = algebr$parseCommand(as.character(as.expression(cmd)));
@@ -258,7 +309,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       g$nAttrs$fillcolor[[query]]="orange"
       cmd_id=g$last_vt
       #------------------------------------
-      g = algebr$parseCommand(cmd[[2]], g)
+      g = algebr$parseCommand(cmd[[2]], g, isInput=TRUE)
       #-------------------------------------
       g=algebr$addEdgeInput(g$last_vt, query, g)
       #-------------------
@@ -291,7 +342,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
             # print(paste("cmd:",cmd, length(cmd)))
             arg=cmd[[i]]
             #------------------------------------
-            g = algebr$parseCommand(arg, g)
+            g = algebr$parseCommand(arg, g, isInput=TRUE, isOutput=FALSE)
             # connect operand/arguments as input to the operator/function:
             label=names(cmd[i])
             g=algebr$addEdgeInput(g$last_vt, cmd_id, g, label)
@@ -346,9 +397,22 @@ algebr$getChunks = function(g, cmd){
 
 
 # visualy compare if each vertex of a graph has a matching list of edges (required for GraphViz)
-algebr$compareCE = function(g){
-  print(sort(g$V))
-  print(sort(names(g$E)))
+algebr$compareVE = function(g){
+  out=list(nodes=sort(g$V), edges_names= sort(names(g$E)))
+  sel=which(!out$nodes %in% out$edges_names)
+  print(out$nodes %in% out$edges_names)
+  if(length(sel)>0)
+    cat(paste("Error: These nodes are not matched by the lists of edges: ",paste(out$nodes[sel], collapse = ", ")))
+  sel=which(!out$edges_names %in% out$nodes)
+  print(out$edges_names %in% out$nodes)
+  if(length(sel)>0)
+    cat(paste("Error: These nodes do not occure the lists of nodes: ",paste(out$edge_names[sel], collapse=", ")))
+  cat(paste())
+  cat(paste("Lists of edges: ",length(out$edges_names),"\n"))
+  cat(paste("Number of vertexes: ",length(out$nodes),"\n"))
+  
+  
+  return(out)
 }
 
 

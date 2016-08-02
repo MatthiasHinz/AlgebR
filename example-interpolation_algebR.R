@@ -69,7 +69,7 @@ interpolator = getInterpolator(modelSemivariogram(zincPointData), zincPointData)
 locInterest = SField(geometry(meuse.grid), geometry(meuse.grid), cellsArePoints = TRUE)
 intZincPointData = interpolator(locInterest)
 #class(intZincPointData)
-#spplot(intZincPointData@observations[1])
+spplot(intZincPointData@observations[1])
 
 
 ## Create / visualize graph
