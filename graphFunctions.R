@@ -1,7 +1,8 @@
-#library(stringr)
+library(stringr)
 library("Rgraphviz")
 library(CodeDepends)
 library(codetools)
+
 
 algebr = new.env()
 
@@ -39,6 +40,7 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
       return(TRUE)
     }
     algebr=data
+    algebr$rec_num = algebr$rec_num+1 #record number
     #------------------------------------------------------------------------------------
     # Collect provenance information from workspace changes that may be used for parsing
     #------------------------------------------------------------------------------------
@@ -49,7 +51,7 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
     #notify and track new variables
     new_vars = algebr$new_ls[!algebr$new_ls %in% algebr$last_ls]
     if(length(new_vars)>0)
-      cat(paste("The following variables have been initialized: ", paste(new_vars, collapse = " ")))
+      cat(paste("The following variables have been initialized: ", paste(new_vars, collapse = " "),"\n"))
     
     ls(envir = globalenv())[ls() %in% algebr$ls_last]
     
@@ -86,6 +88,10 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
 
 
 algebr$enableProvenance <- function(){
+  if(is.null(algebr$rec_num))
+    algebr$rec_num = 0
+  if(is.null(algebr$version_history))
+    algebr$version_history = list()
   if(is.null(algebr$history_list))
     algebr$history_list = list()
   if(is.null(algebr$scriptGraph))
@@ -131,8 +137,10 @@ algebr$history <- function(){
 }
 
 algebr$reset <-function(){
+  algebr$rec_num = 0
+  algebr$version_history = list()
   algebr$history_list = list()
-  algebr$scriptGraph = newDerivationGraph();
+  algebr$scriptGraph = algebr$newDerivationGraph();
 }
 
 ###
@@ -140,7 +148,7 @@ algebr$reset <-function(){
 ####
 
 algebr$addNode = function(node_id, g, label=NULL, color=NULL, shape=NULL){
-  node_id = as.character(as.expression(node_id))
+  node_id = algebr$unquote(as.character(as.expression(node_id)))
   if (all(g$V != node_id)){
     g$V = append(g$V, node_id)
     g$E[[node_id]]=list(edges=c(), weights=c())
@@ -153,9 +161,30 @@ algebr$addNode = function(node_id, g, label=NULL, color=NULL, shape=NULL){
   return(g)
 }
 
+algebr$addNewVersionRecord <- function(var){
+  if(is.null(algebr$version_history[[var]]))
+    algebr$version_history[[var]]=data.frame()
+  instance=data.frame(rec_num = algebr$rec_num, class=class(get(var,envir = globalenv())), timestamp=timestamp())
+  algebr$version_history[[var]]=rbind(algebr$version_history[[var]], instance)
+}
+
+algebr$versions <- function(var){
+  if(!is.character(var))
+    var=as.character(substitute(var))
+  #print(var)
+  return(algebr$version_history[[var]])
+}
 
 algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE) {
-  var = as.character(as.expression(var))#ensure that variable name is a string
+  var = algebr$unquote(as.character(as.expression(var)))#ensure that variable name is a string
+  isVersionUpdated=FALSE
+  
+  #TODO: selections such as meuse$zinc are not yet supported for versioning
+  if(exists(var,envir = globalenv()) && is.null(algebr$version_history[[var]])){
+    algebr$addNewVersionRecord(var)
+    isVersionUpdated=TRUE
+  }
+  
   if(isInput && isOutput)
     #normally never happens...
     warning(paste0("Algebr: The variable \"",var,"\" was classified as Input AND output. The resulting derivation graph may be flawed."))
@@ -170,12 +199,32 @@ algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE) {
     if(!var %in% algebr$last_ls && !exists(var, envir = parent.env(globalenv()))){
         return(algebr$addNodeLiteral(label = var, g))
     }
+    ver_num = dim(subset(algebr$versions(var), rec_num<algebr$rec_num))[1]
+    #versioning support of variables
+    #print(paste(ver_num, "version_num1"))
+    if(ver_num>1){
+      var = paste0(var,"~",ver_num)
+    }
   }else if(isOutput){
     #for outputs, its sufficient to check if objects exists in current workspace
     if(!var %in% algebr$new_ls && !exists(var, envir = parent.env(globalenv()))){
       return(algebr$addNodeLiteral(label = var, g))
     }
+    #create entry in version history
+    if(exists(var,envir = globalenv()) && !isVersionUpdated){
+      algebr$addNewVersionRecord(var)
+    }
+    
+    #versioning support of variables
+  
+    ver_num = dim(algebr$versions(var))[1]
+    print(paste(ver_num, "version_num2",var))
+    if(ver_num>1){
+      var = paste0(var,"~",ver_num)
+    }
+
   }
+  
   g=algebr$addNode(var,g)
   return(g)
 }
@@ -224,7 +273,7 @@ algebr$addEdgeFunctionCall <- function(fun_id, call_id, g, hidden=FALSE){
 
 
 algebr$addNodeLiteral = function(label, g){
-  vt_id=as.character(as.integer(runif(1)*1000)) #generates a random id for the node to be unique
+  vt_id=as.character(as.integer(runif(1)*100000)) #generates a random id for the node to be unique
   g=algebr$addNode(node = vt_id, g = g,label = label)
   
   
@@ -265,7 +314,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
     
     #Case 3.1: cmd is a function definition (whole definition can hardly be displayed or has to be parsed with special care)
     if(cmd[[1]]=='function'){
-      cmd_id=paste0("def",as.character(as.integer(runif(1)*1000)))
+      cmd_id=paste0("def",as.character(as.integer(runif(1)*100000)))
       # cmd_o=paste(as.character(as.expression(cmd), collapse="\n", sep=""))
       g$chunks[[cmd_id]]=list(code=cmd, id=cmd_id)
       g$nAttrs$fillcolor[[cmd_id]]="orange"
@@ -275,6 +324,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       
     }else if(cmd[[1]]=='['|| cmd[[1]]=='$'|| cmd[[1]]=='@'){
       reference = cmd #TODO: add (this) object reference to profenance of this node
+      
       
       parseSelection = function(cmd){
         #print(paste(as.character(as.expression(cmd)), "parseSelection"))
@@ -290,6 +340,9 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
           return(list(parent = parent, selection=paste(parent, selection, sep="_")))
         }
       }
+      
+      
+      
       
       selout=parseSelection(cmd)
       # print(paste("OUT:", selout$parent, selout$selection))
@@ -321,7 +374,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       #i.e. diferentiate between mathematical/logical operations and function calls
       if(eval(call("is.function", cmd[[1]]))){
         cmd_id=as.character(as.integer(runif(1)*1000))
-        label=as.character(as.expression(cmd[[1]]))
+        label=algebr$unquote(as.character(as.expression(cmd[[1]])))
         # print(paste("label: ",label))
         g$fCalls[[cmd_id]]=label
         fdef=eval(cmd[[1]])
@@ -349,7 +402,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
           }
 
         #print(paste("findglobals...", cmd[[1]]))        
-        if(!is.primitive(get(as.character(as.expression(cmd[[1]]))))){
+        if(!is.primitive(get(algebr$unquote(as.character(as.expression(cmd[[1]])))))){
           globals = eval(call("findGlobals", get(as.character(as.expression(cmd[[1]]))), merge=FALSE))
           ##TODO: expore function references to other packages
           
@@ -388,6 +441,13 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
 ###
 # Utility functions
 ####
+
+algebr$unquote = function(str){
+  if(str_detect(str,"^`.*`\\Z"))
+     return(str_sub(str, 2,-2))
+  else
+    return(str)
+}
 
 
 algebr$getChunks = function(g, cmd){
