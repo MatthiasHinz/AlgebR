@@ -7,7 +7,7 @@ library(gstat)
 library(mss)
 
 #----------------------------------------------------
-
+set.seed(123)
 rm(list=ls())
 source("graphFunctions.R")
 

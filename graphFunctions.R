@@ -70,7 +70,7 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
     if(length(side_effects)>0){
       cmd_id = algebr$scriptGraph$first_call
       sapply(side_effects, function(variable){
-        algebr$scriptGraph <<- algebr$addNodeObject(var = variable, g = algebr$scriptGraph, isOutput = FALSE) ##TODO: fix bug when isOutput=TRUE
+        algebr$scriptGraph <<- algebr$addNodeObject(var = variable, g = algebr$scriptGraph, isOutput = TRUE)
         algebr$scriptGraph <<- algebr$addEdgeOutput(output =  variable,cmd = cmd_id,g = algebr$scriptGraph, hidden = TRUE)
       }
         
@@ -161,9 +161,24 @@ algebr$addNode = function(node_id, g, label=NULL, color=NULL, shape=NULL){
   return(g)
 }
 
+#returns the last instance of the version history of a variable, i.e. the most recently collected metadata
+algebr$instance <- function(var){
+  if(!is.character(var))
+    var=as.character(substitute(var))
+   versions = algebr$versions(var)
+   return(versions[dim(versions)[1],])
+}
+
 algebr$addNewVersionRecord <- function(var){
+  var=as.character(as.expression(var))
+ # print(paste("Version update of", var))
   if(is.null(algebr$version_history[[var]]))
     algebr$version_history[[var]]=data.frame()
+  #make sure that versions updated only ONCE per execution (even if this method might be called multiple times)
+  else if(algebr$instance(var)$rec_num>=algebr$rec_num){
+    return()
+  }
+  
   instance=data.frame(rec_num = algebr$rec_num, class=class(eval(parse(text=var),envir = globalenv())), timestamp=timestamp())
   algebr$version_history[[var]]=rbind(algebr$version_history[[var]], instance)
 }
@@ -176,7 +191,7 @@ algebr$versions <- function(var){
 }
 
 algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE, isSubset=FALSE) {
- 
+  
   var = algebr$unquote(as.character(as.expression(var)))#ensure that variable name is a string
   #print(paste("addN:",var))
   isVersionUpdated=FALSE
@@ -203,13 +218,13 @@ algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE, isSubset
     }
     ver_num = dim(subset(algebr$versions(var), rec_num<algebr$rec_num))[1]
     #versioning support of variables
-    print(paste(ver_num, "version_num1",var, algebr$rec_num))
+   # print(paste(ver_num, "version_num1",var, algebr$rec_num))
     if(ver_num>1){
       node_name = paste0(var,"~",ver_num)
       label=node_name
     }
     class=algebr$versions(var)[ver_num, "class"]
-    print(paste("CLASS,",class))
+    #print(paste("CLASS,",class))
     if(length(class)==0 &&isSubset)
       class=algebr$versions(var)[ver_num+1, "class"]
     label=paste0(label, " [",class,"]")
@@ -226,7 +241,7 @@ algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE, isSubset
     #versioning support of variables
   
     ver_num = dim(algebr$versions(var))[1]
-    print(paste(ver_num, "version_num2",var, algebr$rec_num))
+    #print(paste(ver_num, "version_num2",var, algebr$rec_num))
     if(ver_num>1){
       node_name = paste0(var,"~",ver_num)
       label=node_name
@@ -340,26 +355,6 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
         else
           return(findParent(cmd[[2]]))
       }
-      
-      
-      # parseSelection = function(cmd){
-      #   #print(paste(as.character(as.expression(cmd)), "parseSelection"))
-      #   parent = cmd[[2]]
-      #   selection = paste(cmd[3:length(cmd)],collapse =";")
-      #   
-      #   if(length(parent)>1 && (parent[[1]]=='['|| parent[[1]]=='$'|| parent[[1]]=='@')){
-      #     subselection = parseSelection(cmd[[2]])
-      #     parent = subselection$parent
-      #     selection = paste(subselection$selection, selection, sep="_")
-      #     return(list(parent = parent, selection=selection))
-      #   }else{
-      #     return(list(parent = parent, selection=paste(parent, selection, sep="_")))
-      #   }
-      # }
-      
-      #selout=parseSelection(cmd)
-      # print(paste("OUT:", selout$parent, selout$selection))
-      #g=algebr$parseCommand(selout$parent,g, isInput = TRUE, isOutput = FALSE)
       
       parent = findParent(cmd)
       #print(paste("Parent: ",parent))
