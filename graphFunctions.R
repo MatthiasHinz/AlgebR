@@ -25,7 +25,7 @@ algebr$getScriptGraph <- function(g=algebr$scriptGraph){
   gR <- graphNEL(nodes = g$V,
                  edgeL = g$E,
                  edgemode = "directed")
-  graph.par(list(fontsize=14))
+  graph.par(list(fontsize=11))
   gR <- layoutGraph(gR) #graphNEL format (graph package, just edges and nodes)
   #Ragraph format (GraphViz package, includes layout information)
   gRlayout <- agopen(gR, name="f", attrs=g$attrs, nodeAttrs=g$nAttrs, edgeAttrs=g$eAttrs) 
@@ -70,7 +70,7 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
     if(length(side_effects)>0){
       cmd_id = algebr$scriptGraph$first_call
       sapply(side_effects, function(variable){
-        algebr$scriptGraph <<- algebr$addNodeObject(var = variable, g = algebr$scriptGraph)
+        algebr$scriptGraph <<- algebr$addNodeObject(var = variable, g = algebr$scriptGraph, isOutput = FALSE) ##TODO: fix bug when isOutput=TRUE
         algebr$scriptGraph <<- algebr$addEdgeOutput(output =  variable,cmd = cmd_id,g = algebr$scriptGraph, hidden = TRUE)
       }
         
@@ -164,7 +164,7 @@ algebr$addNode = function(node_id, g, label=NULL, color=NULL, shape=NULL){
 algebr$addNewVersionRecord <- function(var){
   if(is.null(algebr$version_history[[var]]))
     algebr$version_history[[var]]=data.frame()
-  instance=data.frame(rec_num = algebr$rec_num, class=class(get(var,envir = globalenv())), timestamp=timestamp())
+  instance=data.frame(rec_num = algebr$rec_num, class=class(eval(parse(text=var),envir = globalenv())), timestamp=timestamp())
   algebr$version_history[[var]]=rbind(algebr$version_history[[var]], instance)
 }
 
@@ -175,12 +175,14 @@ algebr$versions <- function(var){
   return(algebr$version_history[[var]])
 }
 
-algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE) {
+algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE, isSubset=FALSE) {
+ 
   var = algebr$unquote(as.character(as.expression(var)))#ensure that variable name is a string
+  #print(paste("addN:",var))
   isVersionUpdated=FALSE
-  
-  #TODO: selections such as meuse$zinc are not yet supported for versioning
-  if(exists(var,envir = globalenv()) && is.null(algebr$version_history[[var]])){
+  label=var
+  node_name=var
+  if((isSubset || exists(var,envir = globalenv())) && is.null(algebr$version_history[[var]])){
     algebr$addNewVersionRecord(var)
     isVersionUpdated=TRUE
   }
@@ -196,36 +198,43 @@ algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE) {
     # -- so there might be cases of missclassification as literal
     
     #if-clause assumes that the previously executed task did not add variables to any parent environment
-    if(!var %in% algebr$last_ls && !exists(var, envir = parent.env(globalenv()))){
+    if(!var %in% algebr$last_ls && !isSubset && !exists(var, envir = parent.env(globalenv()))){
         return(algebr$addNodeLiteral(label = var, g))
     }
     ver_num = dim(subset(algebr$versions(var), rec_num<algebr$rec_num))[1]
     #versioning support of variables
-    #print(paste(ver_num, "version_num1"))
+    print(paste(ver_num, "version_num1",var, algebr$rec_num))
     if(ver_num>1){
-      var = paste0(var,"~",ver_num)
+      node_name = paste0(var,"~",ver_num)
+      label=node_name
     }
+    class=algebr$versions(var)[ver_num, "class"]
+    print(paste("CLASS,",class))
+    if(length(class)==0 &&isSubset)
+      class=algebr$versions(var)[ver_num+1, "class"]
+    label=paste0(label, " [",class,"]")
   }else if(isOutput){
     #for outputs, its sufficient to check if objects exists in current workspace
-    if(!var %in% algebr$new_ls && !exists(var, envir = parent.env(globalenv()))){
+    if(!var %in% algebr$new_ls && !isSubset && !exists(var, envir = parent.env(globalenv()))){
       return(algebr$addNodeLiteral(label = var, g))
     }
     #create entry in version history
-    if(exists(var,envir = globalenv()) && !isVersionUpdated){
+    if((isSubset || exists(var,envir = globalenv())) && !isVersionUpdated){
       algebr$addNewVersionRecord(var)
     }
     
     #versioning support of variables
   
     ver_num = dim(algebr$versions(var))[1]
-    print(paste(ver_num, "version_num2",var))
+    print(paste(ver_num, "version_num2",var, algebr$rec_num))
     if(ver_num>1){
-      var = paste0(var,"~",ver_num)
+      node_name = paste0(var,"~",ver_num)
+      label=node_name
     }
-
+    label=paste0(label, " [",algebr$versions(var)[ver_num, "class"],"]")
   }
   
-  g=algebr$addNode(var,g)
+  g=algebr$addNode(node_name,g, label = label)
   return(g)
 }
 
@@ -322,39 +331,51 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       g$E[[cmd_id]]=list(edges=c(), weights=c())
       #handle function definitions
       
-    }else if(cmd[[1]]=='['|| cmd[[1]]=='$'|| cmd[[1]]=='@'){
+    }else if(cmd[[1]] =='[[' || cmd[[1]]=='['|| cmd[[1]]=='$'|| cmd[[1]]=='@'){
       reference = cmd #TODO: add (this) object reference to profenance of this node
       
-      
-      parseSelection = function(cmd){
-        #print(paste(as.character(as.expression(cmd)), "parseSelection"))
-        parent = cmd[[2]]
-        selection = paste(cmd[3:length(cmd)],collapse =";")
-        
-        if(length(parent)>1 && (parent[[1]]=='['|| parent[[1]]=='$'|| parent[[1]]=='@')){
-          subselection = parseSelection(cmd[[2]])
-          parent = subselection$parent
-          selection = paste(subselection$selection, selection, sep="_")
-          return(list(parent = parent, selection=selection))
-        }else{
-          return(list(parent = parent, selection=paste(parent, selection, sep="_")))
-        }
+      findParent <- function(cmd){
+        if(length(cmd)==1)
+          return(cmd)
+        else
+          return(findParent(cmd[[2]]))
       }
       
       
+      # parseSelection = function(cmd){
+      #   #print(paste(as.character(as.expression(cmd)), "parseSelection"))
+      #   parent = cmd[[2]]
+      #   selection = paste(cmd[3:length(cmd)],collapse =";")
+      #   
+      #   if(length(parent)>1 && (parent[[1]]=='['|| parent[[1]]=='$'|| parent[[1]]=='@')){
+      #     subselection = parseSelection(cmd[[2]])
+      #     parent = subselection$parent
+      #     selection = paste(subselection$selection, selection, sep="_")
+      #     return(list(parent = parent, selection=selection))
+      #   }else{
+      #     return(list(parent = parent, selection=paste(parent, selection, sep="_")))
+      #   }
+      # }
       
-      
-      selout=parseSelection(cmd)
+      #selout=parseSelection(cmd)
       # print(paste("OUT:", selout$parent, selout$selection))
-      g=algebr$parseCommand(selout$parent,g, isInput = TRUE, isOutput = FALSE)
+      #g=algebr$parseCommand(selout$parent,g, isInput = TRUE, isOutput = FALSE)
+      
+      parent = findParent(cmd)
+      #print(paste("Parent: ",parent))
+      g=algebr$addNodeObject(var = parent, g = g, isInput = isInput,isOutput = isOutput)
       parent = g$last_vt
       
-      g=algebr$parseCommand(as.name(selout$selection),g, isInput = FALSE, isOutput = FALSE) ##TODO not so clear how to handel isInput/isOutput flags here (may lead to misclassification in addNodeObject currently)
+      #g=algebr$parseCommand(as.name(selout$selection),g, isInput = FALSE, isOutput = FALSE) ##TODO not so clear how to handel isInput/isOutput flags here (may lead to misclassification in addNodeObject currently)
+      g=algebr$addNodeObject(var = cmd, g = g, isInput = isInput,isOutput = isOutput, isSubset=TRUE)
       query = g$last_vt
       cmd_id=g$last_vt
       # print(paste(parent, selout$selection," <- create selection"))
-      g=algebr$addEdgeInput(parent, query, g)
-      
+      if(isInput){
+        g=algebr$addEdgeInput(parent, query, g)
+      }else if(isOutput){
+        g=algebr$addEdgeOutput(parent, query, g)
+      }
       #-------------------
     }else if(any(cmd[[1]]==c("log","sin","cos"))&& (is.character(cmd[[2]]) || is.numeric(cmd[[2]]))){
       g = algebr$parseCommand(as.character(as.expression(cmd)));
