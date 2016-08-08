@@ -1,6 +1,6 @@
 # AlgebR
 
-#install dependencies
+##Install dependencies
 ```
 install.packages("codetools")
 install.packages("devtools")
@@ -9,9 +9,9 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("Rgraphviz")
 ```
 
-#install dependencies for examples
+##install dependencies for examples
 
-#interpolation example
+##interpolation example
 ```
 install.packages(c("xts","gstat", "sp", "devtools"))
 devtools::install_github("edzer/mss")
