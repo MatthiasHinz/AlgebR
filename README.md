@@ -6,7 +6,7 @@ install.packages("codetools")
 
 install.packages("devtools")
 
-install_github('duncantl/CodeDepends')
+devtools::install_github('duncantl/CodeDepends')
 
 source("https://bioconductor.org/biocLite.R")
 
