@@ -9,8 +9,13 @@ devtools::install_github('duncantl/CodeDepends')
 source("https://bioconductor.org/biocLite.R")
 biocLite("Rgraphviz")
 ```
-###Interpolation example
+##Dependencies for interpolation example
 ```
 install.packages(c("xts","gstat", "sp", "devtools"))
 devtools::install_github("edzer/mss")
+```
+##Dependencies SPODT
+```
+install.packages("SPODT")
+install.packages("tree")
 ```
