@@ -9,9 +9,9 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("Rgraphviz")
 ```
 
-##install dependencies for examples
+##Install dependencies for examples
 
-##interpolation example
+##Interpolation example
 ```
 install.packages(c("xts","gstat", "sp", "devtools"))
 devtools::install_github("edzer/mss")
