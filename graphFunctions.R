@@ -50,8 +50,8 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
     
     #notify and track new variables
     new_vars = algebr$new_ls[!algebr$new_ls %in% algebr$last_ls]
-    if(length(new_vars)>0)
-      cat(paste("The following variables have been initialized: ", paste(new_vars, collapse = " "),"\n"))
+   # if(length(new_vars)>0)
+   #   cat(paste("The following variables have been initialized: ", paste(new_vars, collapse = " "),"\n"))
     
     ls(envir = globalenv())[ls() %in% algebr$ls_last]
     
@@ -106,15 +106,16 @@ algebr$enableProvenance <- function(){
     return(invisible())
   }
   
-  algebr$last_ls = ls(envir = globalenv())
-  for(variable_str in algebr$last_ls){
-    #variable = get(variable_str)
-    isTracked=eval(parse(text=paste0("attr(",variable_str,", \"isTracked\")")), envir=globalenv())
-    
-    if(!isTRUE(isTracked)){
-      isTracked=eval(parse(text=paste0("attr(",variable_str,", \"isTracked\") <- FALSE")), envir=globalenv())
-    }
-  }
+   algebr$last_ls = ls(envir = globalenv())
+   
+  # for(variable_str in algebr$last_ls){
+  #   #variable = get(variable_str)
+  #   isTracked=eval(parse(text=paste0("attr(",variable_str,", \"isTracked\")")), envir=globalenv())
+  #   
+  #   if(!isTRUE(isTracked)){
+  #     isTracked=eval(parse(text=paste0("attr(",variable_str,", \"isTracked\") <- FALSE")), envir=globalenv())
+  #   }
+  # }
   invisible()
 }
 
@@ -179,7 +180,7 @@ algebr$addNewVersionRecord <- function(var){
     return()
   }
   
-  instance=data.frame(rec_num = algebr$rec_num, class=class(eval(parse(text=var),envir = globalenv())), timestamp=timestamp())
+  instance=data.frame(rec_num = algebr$rec_num, class=class(eval(parse(text=var),envir = globalenv())), semantics = algebr$estimateSemantics(var), timestamp=timestamp(quiet = TRUE))
   algebr$version_history[[var]]=rbind(algebr$version_history[[var]], instance)
 }
 
@@ -223,11 +224,11 @@ algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE, isSubset
       node_name = paste0(var,"~",ver_num)
       label=node_name
     }
-    class=algebr$versions(var)[ver_num, "class"]
+    class=algebr$versions(var)[ver_num, "semantics"]
     #print(paste("CLASS,",class))
     if(length(class)==0 &&isSubset)
-      class=algebr$versions(var)[ver_num+1, "class"]
-    label=paste0(label, " [",class,"]")
+      class=algebr$versions(var)[ver_num+1, "semantics"]
+    label=paste0(label, " \\n[",class,"]")
   }else if(isOutput){
     #for outputs, its sufficient to check if objects exists in current workspace
     if(!var %in% algebr$new_ls && !isSubset && !exists(var, envir = parent.env(globalenv()))){
@@ -246,7 +247,7 @@ algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE, isSubset
       node_name = paste0(var,"~",ver_num)
       label=node_name
     }
-    label=paste0(label, " [",algebr$versions(var)[ver_num, "class"],"]")
+    label=paste0(label, " \\n[",algebr$versions(var)[ver_num, "semantics"],"]")
   }
   
   g=algebr$addNode(node_name,g, label = label)
@@ -277,7 +278,7 @@ algebr$addEdgeInput <- function(input, cmd, g, label=NULL, hidden=FALSE){
     if(hidden)
       g$eAttrs$style[[paste0(input, "~", cmd)]] = "dashed"
   }else
-    warning(paste("AlgebR: Dublicate edge from", input,"to",cmd,"! Second edge (and posdibly the label) will not display in derivation graph."))
+    warning(paste("AlgebR: Dublicate edge from", input,"to",cmd,"! Second edge (and possibly the label) will not display in derivation graph."))
     g$last_vt = input
   return(g)
 }
@@ -323,7 +324,8 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
     g=algebr$addNodeLiteral(as.character(as.expression(cmd)), g)
     cmd_id=g$last_vt
     #CASE 2: cmd is an assignment (TODO: handle operators like ->, <<- ...)
-  }else if(any(class(cmd) ==c("=", "<-"))){
+  }else if(any(class(cmd) ==c("=", "<-", "<<-"))){
+    cmd = algebr$rewriteReplacementFunction(cmd) #turn calls to replacement functions into a parser-friendly style
     # handle left-hand side of assignmet
     #print(paste("something wrong? - sould be an assignment",as.character(as.expression(cmd))))
     g = algebr$parseCommand(cmd[[2]], g, isOutput=TRUE)
@@ -419,7 +421,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
 
         #print(paste("findglobals...", cmd[[1]]))        
         if(!is.primitive(get(algebr$unquote(as.character(as.expression(cmd[[1]])))))){
-          globals = eval(call("findGlobals", get(as.character(as.expression(cmd[[1]]))), merge=FALSE))
+          globals = eval(call("findGlobals", eval(parse(text=as.character(as.expression(cmd[[1]])))), merge=FALSE))
           ##TODO: expore function references to other packages
           
           ls_func = globals$functions[globals$functions %in% ls(envir = globalenv())]
@@ -453,6 +455,152 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
 }
 
 
+# turns calls of replacement functions into a parser-friendly form
+#
+# For instance:
+# attr(t, "semantics") <- "test"
+# into
+# t <- `attr<-`(t, "semantics", "test")
+#
+# See http://adv-r.had.co.nz/Functions.html
+algebr$rewriteReplacementFunction = function(expr){
+  if(is.call(expr[[2]])){
+    fname= expr[[2]][[1]]
+
+    #exception for these operators:
+    if(any(as.character(fname) %in% c('[[','[','$','@'))){
+      print(expr)
+      return(expr)
+    }
+      
+    fname=as.name(paste0(fname,"<-"))
+    # find out if a replacement function was used:
+    if(exists(as.character(fname)) && eval(call("is.function", fname))){
+      op = expr[[1]]
+      value = expr[[3]]
+      obj = expr[[2]][[2]]
+      args= as.list(expr[[2]][-1]);args
+      cl=append(fname, args);cl
+      cl=append(cl,value);cl
+      cl=as.call(cl);cl
+      cl=list(op, obj, cl);cl
+      cl=as.call(cl);cl
+      return(cl)
+    }
+  }
+  return(expr)
+}
+
+###
+# Semantics related functions
+####
+
+algebr$estimateSemantics <- function(var, env=globalenv()){
+  
+  if(!is.character(var))
+    var=as.character(substitute(var))
+  
+  print(var)
+  
+  #obj = get(var, envir = env)
+  obj = eval(parse(text=var),envir = env)
+  
+  if(!is.null(attr(obj, "semantics")))
+    return(attr(obj, "semantics"))
+  # test if object is annotated with semantics, if not, predict semantics from class and structure (note that the latter is only a generic assumption, i.e. based on heuristics)
+  # be carful about the order of if-statements, because some classes extend others but imply different semantics
+  if (any(sapply(list(is.numeric, is.character, is.factor, is.symbol, is.name, is.expression), function(fun) {
+    return(fun(obj))
+  }))) {
+    if(length(obj)<=1)
+      return("Q")
+    else return("Q set")
+  }
+  
+  if (is.logical(obj)) {
+    if(length(obj)<=1)
+      return("bool")
+    else return("bool set")
+  }
+  
+  if (is(obj, "CRS")) { ## for the actual mss package
+    return("'a")
+  }
+  
+  if (is(obj, "SField")) { ## for the actual mss package
+    obs = slot(obj, "observations")
+    sObs = algebr$estimateSemantics(obs, env = environment())
+    sObs = str_replace(sObs, " set","")
+    return(paste(sObs, "x SExtend set"))
+  }
+  
+  if (is(obj, "SpatialLinesDataFrame")) {
+    return("S x Q set")
+  }
+  
+  if (is(obj, "SpatialLines")) {
+    return("S set")
+  }
+  
+  
+  if (is(obj, "SpatialPixelsDataFrame")) {
+    return("S x Q set")
+  }
+  
+  if (is(obj, "SpatialPointsDataFrame")) {
+    return("S x Q set")
+  }
+  
+  if (is(obj, "SpatialPixels")) {
+    return("S set")
+  }
+  
+  if (is(obj, "SpatialPoints")) {
+    #how many points
+    return("S set")
+  }
+  
+  if (is(obj, "SpatialMultiPointsDataFrame")) {
+    #how many points
+    return("S x Q set")
+  }
+  
+  if (is(obj, "SpatialMultiPoints")) {
+    #how many points
+    return("S set")
+  }
+  
+  if (is(obj, "SpatialGridDataFrame")) {
+    return("R x Q set")
+  }
+  
+  if (is(obj, "SpatialGrid")) {
+    return("R set")
+  }
+  
+  if (is(obj, "SpatialPolygonsDataFrame")) {
+    #TODO: how many Polygons?
+    return("R x Q set")
+  }
+  
+  if (is(obj, "SpatialPolygons")) {
+    #TODO: how many Polygons?
+    return("R set")
+  }
+  
+  if (is(obj, "Spatial")) {
+    return("S set")
+  }
+  
+ if(any(sapply(list(is.data.frame, is.list, is.array, is.matrix), function(fun) {
+    return(fun(obj))
+  }))) {
+      return("Q set")
+  }
+  
+  return(class(obj))
+}
+#jars of clay - frail
 
 ###
 # Utility functions
