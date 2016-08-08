@@ -4,6 +4,7 @@
 ```
 install.packages("codetools")
 install.packages("devtools")
+install.packages("stringr")
 devtools::install_github('duncantl/CodeDepends')
 source("https://bioconductor.org/biocLite.R")
 biocLite("Rgraphviz")
