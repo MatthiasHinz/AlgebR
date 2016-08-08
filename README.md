@@ -2,7 +2,7 @@
 
 #install dependencies
 
-`install.packages("codetools")
+``install.packages("codetools")
 
 install.packages("devtools")
 
@@ -10,12 +10,12 @@ install_github('duncantl/CodeDepends')
 
 source("https://bioconductor.org/biocLite.R")
 
-biocLite("Rgraphviz")`
+biocLite("Rgraphviz")``
 
 
 #install dependencies for examples
 
 #interpolation example
-`install.packages(c("xts","gstat", "sp", "devtools"))
+``install.packages(c("xts","gstat", "sp", "devtools"))
 
-devtools::install_github("edzer/mss")`
+devtools::install_github("edzer/mss")``
