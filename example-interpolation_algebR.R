@@ -11,8 +11,10 @@ set.seed(123)
 rm(list=ls())
 source("graphFunctions.R")
 
+
+
 # Initialize provenance tracking
-algebr$enableProvenance()
+
 #algebr$disableProvenance()
 #algebr$reset()
 #algebr$history()
@@ -25,7 +27,7 @@ init_model = function(pointData) {
   sill = var(pointData[[1]])
   vgm(2 * sill / 3, "Sph", range, sill / 3) # initial variogram model
 }
-
+captureSemantics(init_model) <-TRUE
 
 modelSemivariogram = function(pointData) {
   n = names(pointData@observations)
@@ -35,20 +37,31 @@ modelSemivariogram = function(pointData) {
   init = init_model(pointData)
   fit.variogram(variogram(f, pointData@observations), init)
 }
+captureSemantics(modelSemivariogram) <-TRUE
 
 getInterpolator = function(params, pointData) {
   if (!is(params, "variogramModel"))
     warning("getInterpolator: params should be of class variogramModel")
   #if (!is(pointData, "SField"))
   #	warning("getInterpolator: pointData should be of class SField")
-  function(locOfInterest) {
+  out=function(locOfInterest) {
     n = names(pointData@observations)[1] # which variable to model? take first.
     f = as.formula(paste(n, "~ 1")) 
     interpolate(f, pointData, locOfInterest, model = params)
     # interpolate(f, pointData, locOfInterest, model = params, ndiscr=4, verbose=TRUE)
   }
+  captureSemantics(out) <-TRUE
+  attr(out, "semantics") <- "SField"
   # is, strictly not S -> Q but S -> (S,Q)
+  return(out)
 }
+captureSemantics(getInterpolator) <-TRUE
+
+captureSemantics(geometry) <- TRUE
+
+captureSemantics(SField) <- TRUE
+
+algebr$enableProvenance()
 
 
 # Run analysis
@@ -82,3 +95,5 @@ toFile(gRlayout , layoutType="dot", filename="interpolation.dot", fileType="dot"
 toFile(gRlayout , layoutType="dot", filename="interpolation.svg", fileType="svg")
 system(command = "dot -Tpdf interpolation.dot -o interpolation.pdf")
 setwd("../")
+
+algebr$compareVE(algebr$scriptGraph)
