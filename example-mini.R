@@ -15,5 +15,3 @@ system(command = "dot -Tpdf miniexample.dot -o miniexpample.pdf")
 setwd("../")
 
 algebr$reset()
-
-

@@ -175,14 +175,26 @@ algebr$addNode = function(node_id, g, label=NULL, color=NULL, shape=NULL){
   if(!is.null(label))
     g$nAttrs$label[[node_id]]=label
   
+  if(!is.null(color))
+    g$nAttrs$fillcolor[[node_id]]="orange"
+  
   g$last_vt=node_id
   return(g)
 }
 
 #returns the last instance of the version history of a variable, i.e. the most recently collected metadata
-algebr$instance <- function(var, pos=0){
+algebr$instance <- function(var, pos=0, forInput=FALSE){
   if(!is.character(var))
     var=as.character(substitute(var))
+  
+  if(forInput){
+    versions = algebr$versions(var)
+    inst=versions[(dim(versions))[1]+pos,]
+    if(algebr$rec_num==inst$rec_num && dim(versions)[1]>1)
+      return(versions[(dim(versions))[1]+pos-1,])
+    else
+      return(inst)
+  }
    versions = algebr$versions(var)
    return(versions[(dim(versions)[1]+pos),])
 }
@@ -190,6 +202,7 @@ algebr$instance <- function(var, pos=0){
 
 
 algebr$addNewVersionRecord <- function(var){
+  #print(paste("new Version record",var))
   var=as.character(as.expression(var))
 
  # print(paste("Version update of", var))
@@ -355,13 +368,21 @@ algebr$addNodeLiteral = function(label, g){
   #g$V = append(g$V, cmd_id)
 }
 
+algebr$addNodeOperation = function(label, g){
+  cmd_id=paste0("fcall_",algebr$makeid())
+  g=algebr$addNode(node_id = cmd_id, label = label,g = g, color = "orange")
+  return(g)
+}
+
 algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eAttrs=list(), nAttrs=list(), chunks=list(), last_vt=NULL), first_call=FALSE, isInput=FALSE, isOutput=FALSE){
+ # print(paste0("cmd:", deparse(cmd)))
   if(first_call)
     g$first_call = NULL
   
   #print(paste(as.character(as.expression(cmd)), class(cmd)))
   cmd_id = NULL
   #CASE 1: cmd is some kind of variable
+  cmdInfo = getInputs(algebr$removeTheAt(cmd))
   if(is.name(cmd)){
     g=algebr$addNodeObject(cmd, g, isInput= isInput, isOutput=isOutput)
     cmd_id=g$last_vt
@@ -385,8 +406,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
     cmd_id = g$last_vt
     g=algebr$addEdgeOutput(output = output_id, cmd = cmd_id, g)
     #case 3: cmd is some kind of call, (possibly right hand of an assignment) 
-  } else if(class(cmd)=="call"){
-    
+  }else if(class(cmd)=="call"){
     #Case 3.1: cmd is a function definition (whole definition can hardly be displayed or has to be parsed with special care)
     if(cmd[[1]]=='function'){
       cmd_id=paste0("def_",algebr$makeid())
@@ -396,6 +416,27 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       g$V = append(g$V, cmd_id)
       g$E[[cmd_id]]=list(edges=c(), weights=c())
       #handle function definitions
+    }else if(algebr$containsOnlyPrimitives(cmdInfo = cmdInfo)){
+      #print(paste0("only primitives:", deparse(cmd)))
+      label=as.character(as.expression(cmd))
+      g=algebr$addNodeOperation(label = label,g = g)
+      cmd_id = g$last_vt
+      outputs = append(cmdInfo@outputs, cmdInfo@updates)
+      inputs = cmdInfo@inputs
+      if(length(inputs)>0)
+        sapply(inputs, function(input){
+          #TODO: This solution needs to be reviewd (probably conflicting versioning)
+          g <<- algebr$addNodeObject(input, g, isInput = TRUE)
+          IID = algebr$instance(input, forInput = TRUE)$IID
+          g <<- algebr$addEdgeInput(input = IID, cmd = cmd_id, g = g)
+        })
+      
+      if(length(outputs)>0)
+        sapply(outputs, function(output){
+          g <<- algebr$addNodeObject(output, g, isOutput = TRUE)
+          IID = algebr$instance(output)$IID
+          g <<- algebr$addEdgeOutput(output = IID, cmd = cmd_id, g = g)
+        })
       
     }else if(cmd[[1]] =='[[' || cmd[[1]]=='['|| cmd[[1]]=='$'|| cmd[[1]]=='@'){
       reference = cmd #TODO: add (this) object reference to profenance of this node
@@ -421,7 +462,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
         g=algebr$addEdgeInput(parent_id, query, g)
       }else if(isOutput){
         g=algebr$addEdgeOutput(parent_id, query, g)
-        parent_old=algebr$instance(as.character(parent_name), pos = -1)$IID
+        parent_old=algebr$instance(as.character(parent_name), forInput = TRUE)$IID
         parent_new=algebr$instance(as.character(parent_name))$IID
         
         g=algebr$addEdgeDerivation(parent = parent_old,child = parent_new,g = g, hidden = TRUE)
@@ -452,10 +493,12 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
         # Ideally, expressions should perhaps be parsed the same way as the parser works (leftmost-innermost ?) and the stack should be evaluated from the first to the last call
         function_obj = algebr$funFromString(cmd[[1]])
 
-        cmd_id=paste0("fcall_",algebr$makeid())
+        
         label=algebr$unquote(as.character(as.expression(cmd[[1]])))
-        g$fCalls[[cmd_id]]=label  #called function (without any annotation)
-        if(isTRUE(attr(function_obj, "SemanticWrapper"))){
+        call_function = label
+        
+        #add semantics to label, if available
+        if(captureSemantics(function_obj)){
           fid=attr(function_obj, "fid")
           sel=which(algebr$tempCallStack$fid == fid)
           if(length(sel)>0){
@@ -467,6 +510,31 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
           }
         }
         
+        g=algebr$addNodeOperation(label, g)
+        
+
+        
+        cmd_id = g$last_vt
+        if(is.null(g$fCalls_count))
+          g$fCalls_count=1
+        
+        
+        g$fCalls[[cmd_id]]=list(fname=call_function, command=cmd, count=g$fCalls_count)  #called function (without any annotation)
+        g$fCalls_count=g$fCalls_count+1
+        if(captureSemantics(function_obj)){
+          g$fCalls[[cmd_id]]=append(g$fCalls[[cmd_id]], list(wrapper_fid = attr(function_obj, "fid")))
+        }
+        
+        ##TODO:review this; HEURISTIC: for graphics function create dependency on previously called plot-funcion
+        if(call_function %in% c("text", "points", "lines", "title", "par", "abline","arrow","axis","Axis","box", "grid","legend","lines", "pch","rug")){
+          for(i in ((length(g$fCalls)-1):1)){
+              if(str_detect(g$fCalls[[i]]$fname, "plot")){
+                cmd_id_plot = names(g$fCalls[i])
+                g=algebr$addEdgeInput(input = cmd_id_plot, cmd = cmd_id, g=g,hidden = TRUE,label = "[heuristic]")
+              }
+          }
+        }
+        
         # print(paste("label: ",label))
        
         fdef=eval(cmd[[1]])
@@ -475,11 +543,11 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
         
         #print(cmd[2:length(cmd)])
         #print(paste0("label: ", label))
-        g$nAttrs$label[[cmd_id]]=label
-        g$nAttrs$fillcolor[[cmd_id]]="orange"
-        g$nAttrs$style[[cmd_id]]="filled"
-        g$V = append(g$V, cmd_id)
-        g$E[[cmd_id]]=list(edges=c(), weights=c())
+        #g$nAttrs$label[[cmd_id]]=label
+        #g$nAttrs$fillcolor[[cmd_id]]="orange"
+        #g$nAttrs$style[[cmd_id]]="filled"
+        #g$V = append(g$V, cmd_id)
+        #g$E[[cmd_id]]=list(edges=c(), weights=c())
         
         
         if(length(cmd)>1)
@@ -528,7 +596,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
     #for all calls:
     for(V in g$V){
       cmd_ids = as.character(cmd_id)
-      call_label=g$fCalls[[cmd_ids]]
+      call_label=g$fCalls[[cmd_ids]]$fname
       if(!is.null(call_label) && V==call_label){
         V_IID = algebr$instance(V)$IID #link latest instance of this function
         g=algebr$addEdgeFunctionCall(V_IID, cmd_ids, g)
@@ -544,7 +612,18 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
   return(g)
 }
 
-
+algebr$containsOnlyPrimitives = function(cmdInfo){
+  funs=names(cmdInfo@functions)
+  sel = funs %in% c("[","[[","$","@") #exclude expressions that only contain subset-operators
+  funs=funs[!sel]
+  if(length(funs)==0)
+    return(FALSE)
+  isPrimitive=sapply(funs, function(fun_string){
+    function_obj = algebr$funFromString(fun_string)
+    return(is.primitive(function_obj))
+  })
+  return(all(isPrimitive))
+}
 # turns calls of replacement functions into a parser-friendly form
 #
 # For instance:
@@ -690,6 +769,9 @@ algebr$estimateSemantics <- function(var, env=globalenv()){
   return(class(obj))
 }
 #jars of clay - frail
+captureSemantics <- function(fun){
+  return(isTRUE(attr(fun,"SemanticWrapper")))
+}
 
 `captureSemantics<-` <- function(fun, value){
   bool=value #shall function be wrapped or not
@@ -714,8 +796,10 @@ algebr$estimateSemantics <- function(var, env=globalenv()){
   }
   
   wrapper=function(){
+    #TODO: Improve wrapping behaviour, e.g. by capturing and passing the original variable names with non-standard evaluation
     ls_fun=ls(envir = environment())
     args = sapply(ls_fun, function(var){
+      print(var)
       out=list(get(var))
       names(out[1]) <- var
       return(out)
@@ -794,11 +878,32 @@ algebr$makeid=function(){
 }
 
 algebr$funFromString = function(string_var, env = globalenv()){
+ # print(paste("funFromString:",string_var))
+  fun_obj = try(get(string_var,envir = env), silent = TRUE)
+  if(is.function(fun_obj))
+    return(fun_obj)
+  #in some cases, the following method works better when the other fails (for instance, when the function contained in a subset, i.e. parent$function())
   if(str_detect(string_var,pattern = "<-")){
     string_var=paste0("`",string_var,"`") 
   }
-  out=eval(parse(text=as.character(as.expression(string_var))), envir = env)
+  fun_obj=eval(parse(text=as.character(as.expression(string_var))), envir = env)
+  return(fun_obj)
 }
 
-
+##this function is created as a workaround for Issue https://github.com/duncantl/CodeDepends/issues/4
+## in CodeDepends. Expressions manipulated with this function are not correct, but it will prevents getInputs from returning wrong inputs
+algebr$removeTheAt = function(expr){
+  if(length(expr)==1){
+    return(expr)
+  }
+  eList = as.list(expr)
+  if(eList[[1]]==as.symbol("@")){
+    return(eList[[2]])
+  }
+  
+  outList=sapply(eList, algebr$removeTheAt)
+  
+  outExp = as.call(outList)
+  return(outExp)
+}
 

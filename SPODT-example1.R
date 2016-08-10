@@ -3,6 +3,18 @@ library(tree)
 
 rm(list=ls())
 source("graphFunctions.R")
+
+captureSemantics(spTransform) <- FALSE
+captureSemantics(`coordinates<-`) <- FALSE
+captureSemantics(`proj4string<-`) <- FALSE
+captureSemantics(CRS) <- FALSE
+
+captureSemantics(test.spodt) <- TRUE
+captureSemantics(spodtSpatialLines) <- TRUE
+captureSemantics(spodt) <- TRUE
+
+captureSemantics(tree) <- FALSE
+captureSemantics(partition.tree) <- FALSE
 algebr$enableProvenance()
 
 ####################################################################
