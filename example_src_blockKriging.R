@@ -1,4 +1,4 @@
-#rm(list=ls())
+rm(list=ls())
 
 source("graphFunctions.R")
 # install.packages(c("sp", "gstat"))
@@ -50,10 +50,10 @@ captureSemantics(init_model) <-TRUE
 captureSemantics(modelSemivariogram) <-TRUE
 captureSemantics(getInterpolator) <-TRUE
 captureSemantics(geometry) <- TRUE
-captureSemantics(SField) <- TRUE
+#captureSemantics(SField) <- TRUE
 captureSemantics(GridTopology) <- TRUE
 captureSemantics(SpatialGrid) <- TRUE
-captureSemantics(aggregate) <- TRUE
+captureSemantics(aggregate) <- FALSE #cause problems if I track it
 captureSemantics(SLattice) <- TRUE
 #-------------------------------------------------------------------------------------
 algebr$enableProvenance()
