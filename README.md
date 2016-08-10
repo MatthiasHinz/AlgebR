@@ -12,6 +12,7 @@ biocLite("Rgraphviz")
 ##Dependencies for interpolation example
 ```
 install.packages(c("xts","gstat", "sp", "devtools"))
+install.packages("rgeos") #optional
 devtools::install_github("edzer/mss")
 ```
 ##Dependencies SPODT
