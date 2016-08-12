@@ -7,7 +7,9 @@ library(gstat)
 library(mss)
 
 #----------------------------------------------------
-#rm(list=ls())
+if(TRUE){
+  rm(list=ls()) #make sure to start from a clean workspace
+}
 source("graphFunctions.R")
 
 # Initialize provenance tracking
@@ -56,7 +58,8 @@ captureSemantics(getInterpolator) <-TRUE
 
 captureSemantics(geometry) <- TRUE
 
-captureSemantics(SField) <- TRUE
+SFieldData <- SField
+captureSemantics(SFieldData) <- TRUE
 
 algebr$enableProvenance()
 
@@ -68,7 +71,7 @@ algebr$enableProvenance()
 demo(meuse, ask=FALSE, echo=FALSE)
 meuse$lzinc = log(meuse$zinc)
 
-zincPointData = SField(meuse["lzinc"], meuse.area)
+zincPointData = SFieldData(meuse["lzinc"], meuse.area)
 #class(zincPointData) # of class SField
 #plot(zincPointData)
 
@@ -76,8 +79,8 @@ zincPointData = SField(meuse["lzinc"], meuse.area)
 interpolator = getInterpolator(modelSemivariogram(zincPointData), zincPointData)
 #class(interpolator) # untyped, but is S -> Q
 
-locInterest = SField(geometry(meuse.grid), geometry(meuse.grid), cellsArePoints = TRUE)
-intZincPointData = interpolator(locInterest)
+locInterest = SFieldData(geometry(meuse.grid), geometry(meuse.grid), cellsArePoints = TRUE)
+intZincPointData = interpolator(locInterest, semantics = "S -> Q")
 #class(intZincPointData)
 spplot(intZincPointData@observations[1])
 
@@ -93,4 +96,6 @@ toFile(gRlayout , layoutType="dot", filename="interpolation.svg", fileType="svg"
 system(command = "dot -Tpdf interpolation.dot -o interpolation.pdf")
 setwd("../")
 
+#for exploration and analytics, if the graph has an error...
 #algebr$compareVE(algebr$scriptGraph)
+

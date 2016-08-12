@@ -50,7 +50,8 @@ captureSemantics(init_model) <-TRUE
 captureSemantics(modelSemivariogram) <-TRUE
 captureSemantics(getInterpolator) <-TRUE
 captureSemantics(geometry) <- TRUE
-#captureSemantics(SField) <- TRUE
+SFieldData <- SField
+captureSemantics(SFieldData) <- TRUE
 captureSemantics(GridTopology) <- TRUE
 captureSemantics(SpatialGrid) <- TRUE
 captureSemantics(aggregate) <- FALSE #cause problems if I track it
@@ -63,7 +64,7 @@ algebr$enableProvenance()
 demo(meuse, ask=FALSE, echo=FALSE)
 meuse$lzinc = log(meuse$zinc)
 
-zincPointData = SField(meuse["lzinc"], meuse.area)
+zincPointData = SFieldData(meuse["lzinc"], meuse.area)
 class(zincPointData) # of class SField
 plot(zincPointData)
 
@@ -71,7 +72,7 @@ plot(zincPointData)
 interpolator = getInterpolator(modelSemivariogram(zincPointData), zincPointData)
 class(interpolator) # untyped, but is S -> Q
 
-locInterest = SField(geometry(meuse.grid), geometry(meuse.grid), cellsArePoints = TRUE)
+locInterest = SFieldData(geometry(meuse.grid), geometry(meuse.grid), cellsArePoints = TRUE)
 intZincPointData = interpolator(locInterest)
 class(intZincPointData)
 spplot(intZincPointData@observations[1])
