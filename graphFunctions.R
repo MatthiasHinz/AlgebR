@@ -222,7 +222,8 @@ algebr$addNewVersionRecord <- function(var){
   if(str_detect(var,pattern = "<-")){
     var0=paste0("`",var,"`") 
   }
-  instance=data.frame(rec_num = algebr$rec_num, IID=IID, class=class(eval(parse(text=var0),envir = globalenv())), semantics = algebr$estimateSemantics(var0), timestamp=timestamp(quiet = TRUE),stringsAsFactors = FALSE)
+  command = paste(deparse(algebr$history()[[algebr$rec_num]]), collapse = "\n")
+  instance=data.frame(rec_num = algebr$rec_num, IID=IID, class=class(eval(parse(text=var0),envir = globalenv())), semantics = algebr$estimateSemantics(var0), command = command, timestamp=timestamp(quiet = TRUE),stringsAsFactors = FALSE)
  # instance=data.frame(rec_num = algebr$rec_num, IID=IID, class=class(eval(parse(text=paste0("`",var,"`")),envir = globalenv())), semantics = algebr$estimateSemantics(var), timestamp=timestamp(quiet = TRUE),stringsAsFactors = FALSE)
   algebr$version_history[[var]]=rbind(algebr$version_history[[var]], instance)
 }
@@ -638,7 +639,7 @@ algebr$rewriteReplacementFunction = function(expr){
 
     #exception for these operators:
     if(any(as.character(fname) %in% c('[[','[','$','@'))){
-      print(expr)
+      #print(expr)
       return(expr)
     }
       
@@ -773,7 +774,10 @@ captureSemantics <- function(fun){
   return(isTRUE(attr(fun,"SemanticWrapper")))
 }
 
-`captureSemantics<-` <- function(fun, value){
+`captureSemantics<-` <- function(fun, value, semantics = NA){
+  if(is.null(semantics)){
+    semantics=NA
+  }
   bool=value #shall function be wrapped or not
   #returieving the function names seems not to be possible from here
   #fname=as.character(substitute(fun,env = globalenv()))
@@ -791,7 +795,9 @@ captureSemantics <- function(fun){
   }
   
   if(isTRUE(attr(fun,"SemanticWrapper"))){
-    warning("Function is already wrapped and won't be wrapped once more.")
+    fun = attr(fun,"wFun")
+    fun = `captureSemantics<-`(fun, value = value, semantics = semantics)
+    warning("Function was already wrapped. It the old wrapper was replaced.")
     return(fun)
   }
   
@@ -799,27 +805,37 @@ captureSemantics <- function(fun){
     #TODO: Improve wrapping behaviour, e.g. by capturing and passing the original variable names with non-standard evaluation
     ls_fun=ls(envir = environment())
     args = sapply(ls_fun, function(var){
-      print(var)
+      #print(var)
       out=list(get(var))
       names(out[1]) <- var
       return(out)
     })
-    output = do.call(wFun, args, envir = environment())
-    s_output = algebr$estimateSemantics(output)
-    s_inputs = sapply(args, function(arg){algebr$estimateSemantics(arg, env = environment())})
+    #remove semantics-argument not to be passed on
+    if(!"semantics" %in% names(formals(wFun))){
+      args=args[names(args)!="semantics"]
+    }
     
-    semantics = paste(paste(s_inputs, collapse = " -> "), s_output, sep=" -> ")
-   
+    output = do.call(wFun, args, envir = environment())
+    
+    if(is.na(semantics)){ ## estimate semantics from in/output
+      s_output = algebr$estimateSemantics(output)
+      s_inputs = sapply(args, function(arg){algebr$estimateSemantics(arg, env = environment())})
+      semantics = paste(paste(s_inputs, collapse = " -> "), s_output, sep=" -> ")
+    }
     ## The call is only recordet if it occurs from the global environment (to avoid confusion if they are called internaly or recursively(?))
     if(isTRUE(algebr$isEnabled) && identical(parent.frame(),globalenv())){
-      print(semantics)
+      cat(paste0(semantics,"\n"))
       callSemantics=data.frame(rec_num=algebr$rec_num, semantics,fid, time = timestamp(quiet = TRUE), stringsAsFactors = FALSE)
       algebr$callStack=rbind(algebr$callStack,callSemantics)
     }
     
     return(output)
   }
-  formals(wrapper) <- formals(wFun)
+  
+  formals_w = formals(wFun)
+  formals_w$semantics = semantics
+  #print(paste(deparse(formals_w), "formals"))
+  formals(wrapper) <- formals_w
   attr(wrapper,"SemanticWrapper") <- TRUE
   attr(wrapper,"wFun") <- wFun
   attr(wrapper,"fid") <- fid
