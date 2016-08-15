@@ -29,9 +29,9 @@ install.packages("tree")
  
  All derivation graphs will be exported and written to the output-folder in different formats (currently dot, svg and pdf). Please note that the plot in R does not display the derivation grahps with all details, so always take the exported files as referenece (See known issues in section 5.1) 
 
-##2. Usage
+##3. Usage
 
-### 2.1 load library
+###3.1 load library
 
 In order to load AlgebR into R you just need to download and source the file `graphFunctions.R`.
 `source("graphFunctions.R") #offline`
@@ -46,7 +46,7 @@ With exception of the `captureSemantics` functions, are functions and objects ar
 [1] "algebr"             "captureSemantics"   "captureSemantics<-"
 ```
 
-### 2.2 Provenance recording
+###3.2 Provenance recording
 
 You can start and stop provenance recording at any place in the script using the `enableProvenance` and `disableProvenance` functions:
 
@@ -66,7 +66,7 @@ If you want AlgebR to go back to it's state before you did any recording, use th
 
 `algebr$reset()`
 
-### 2.3 Render and export derivation graphs
+###3.3 Render and export derivation graphs
 
 The function `algebr$getScriptGraph()` takes the recently recorded derivation graph and returns it as an `Ragraph`-object that can be ploted using the `Rgraphviz` package. The object, as internally used represented and used in AlgebR is a nestled list of nodes, edges and graphics attributes and can be directly accessed with `algebr$scriptGraph`.
 
@@ -86,9 +86,9 @@ toFile(gRlayout , layoutType="dot", filename="myDerivationGraph.svg", fileType="
 system(command = "dot -Tpdf myDerivationGraph.dot -o myDerivationGraph.pdf")
 
 ```
-### 2.3 Object versioning history
+###3.3 Object versioning history
 
-## 4. Export and visualization of derivation graphs
+##4. Export and visualization of derivation graphs
 
 ##5. Known Issues
 
