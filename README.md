@@ -24,10 +24,14 @@ install.packages("SPODT")
 install.packages("tree")
 ```
 
-## 2.1 Getting started with examples
- After installation all dependencies mentioned in section 1, download or checkout the github repository. After setting the R working directory you should be able to execute any of the exable-scripts, e.g. `example-mini.R`, `SPODT-example.R` or `example-interpolation_algebR.R` 
+##2. Getting started
+###2.1 Getting started with a minimalistic example
+ 
+###2.2 Getting started with the examples from GitHub
+ After installation all dependencies mentioned in section 1, download or checkout the github repository. The R working has to be set to the directory where all scripts and files are contained. Now you should be able to execute any of the example-scripts, e.g. `example-mini.R`, `SPODT-example.R` or `example-interpolation_algebR.R` 
  
  All derivation graphs will be exported and written to the output-folder in different formats (currently dot, svg and pdf). Please note that the plot in R does not display the derivation grahps with all details, so always take the exported files as referenece (See known issues in section 5.1) 
+ 
 
 ##3. Usage
 
