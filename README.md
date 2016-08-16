@@ -41,10 +41,8 @@ demo(meuse, ask=FALSE, echo=FALSE)
 meuse$lzinc = log(meuse$zinc)
 algebr$disableProvenance()
 gRlayout = algebr$getScriptGraph()
-setwd("output")
 toFile(gRlayout , layoutType="dot", filename="myDerivationGraph.dot", fileType="dot")
 system(command = "dot -Tpng myDerivationGraph.dot -o myDerivationGraph.png")
-setwd("..")
 algebr$versions(meuse)
 ```
 The resulting derivation graph, rendered and exported as an PNG-file, should look like the following:
