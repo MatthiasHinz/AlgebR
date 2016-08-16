@@ -41,13 +41,12 @@ demo(meuse, ask=FALSE, echo=FALSE)
 meuse$lzinc = log(meuse$zinc)
 algebr$disableProvenance()
 gRlayout = algebr$getScriptGraph()
-toFile(gRlayout , layoutType="dot", filename="myDerivationGraph.dot", fileType="dot")
-system(command = "dot -Tpng myDerivationGraph.dot -o myDerivationGraph.png")
+toFile(gRlayout , layoutType="dot", filename="output/myDerivationGraph.svg", fileType="svg")
 algebr$versions(meuse)
 ```
-The resulting derivation graph, rendered and exported as an PNG-file, should look like the following:
+The resulting derivation graph, rendered and exported as an SVG-file, should look like the following:
 
-![Console Session](https://github.com/MatthiasHinz/AlgebR/raw/master/output/myDerivationGraph.png)
+![Console Session](https://github.com/MatthiasHinz/AlgebR/raw/master/output/myDerivationGraph.svg)
 
 ###2.2 Getting started with the examples from GitHub
  After installation all dependencies mentioned in section 1, download or checkout the github repository. The R working has to be set to the directory where all scripts and files are contained. Now you should be able to execute any of the example-scripts, e.g. `example-mini.R`, `SPODT-example.R` or `example-interpolation_algebR.R` 
@@ -66,11 +65,11 @@ If you want, you can also source the file directly from github, which is faster 
 `source("https://github.com/MatthiasHinz/AlgebR/raw/master/graphFunctions.R") #directly load from gitub`
 
 If you now inspect the workspace with `ls()`, you should have the following output, if you started a clean R session.
-With exception of the `captureSemantics` functions, are functions and objects are bundled wihin the `algebr`-envrionment. The easiest way to acess them is using `algebr$...`. You can also mask the library on the global environment using `attach(algebr)`, but it is not recommended, as it will result in an overfull workspace and may cause unexpected behaviour.
 ```
 > ls()
 [1] "algebr"             "captureSemantics"   "captureSemantics<-"
 ```
+With exception of the `captureSemantics` functions, all functions and objects are bundled wihin the `algebr`-envrionment. The easiest way to acess them is using `algebr$...`. You can also mask the library on the global environment using `attach(algebr)`, but it is not recommended, as it will result in an overfull workspace and may cause unexpected behaviour.
 
 ###3.2 Provenance recording
 
@@ -112,8 +111,26 @@ toFile(gRlayout , layoutType="dot", filename="myDerivationGraph.svg", fileType="
 system(command = "dot -Tpdf myDerivationGraph.dot -o myDerivationGraph.pdf")
 
 ```
-###3.3 Object versioning history
+###3.4 Versioning history of Variables
 
+During an analysis, an object or variable can be overwritten or modified multiple times. When provenance tracking is enabled, AlgebR keeps a versioning history for every variable that is written to the global environment and updates it, whenever a change is noticed. The version history contains information about the 'class' and 'semantics' of the object denoted with the variable, the 'command' that caused the variable modifcation or creation and a 'timestamp', which says when this happened. Less intuitive are the attibutes 'rec_num' and 'IID': The former stands for 'record number' and denotes the number of the task or command that was recorded, starting from the first record; the latter stands for 'instance id' and denotes an identifier that is used to denote a specific instance of the variable in the versioning history. The IID is based on the variable name and also denotes nodes of the derivation graph that refer to a variable.
+
+Subsets, like meuse$zinc for instance, also have a versioning histories if they where modified within the script. Note that  these are less reliable because subsets can be accessed an modified in different ways and it is at least very difficult to keep track of them.
+
+The versioning history can be accessed using the `versions`-function as the following:
+
+```
+algebr$versions(meuse)
+  rec_num     IID                  class semantics                                command                                  timestamp
+1       1   meuse SpatialPointsDataFrame S x Q set demo(meuse, ask = FALSE, echo = FALSE) ##------ Tue Aug 16 17:59:40 2016 ------##
+2       2 meuse~2 SpatialPointsDataFrame S x Q set          meuse$lzinc = log(meuse$zinc) ##------ Tue Aug 16 17:59:41 2016 ------##
+```
+If you only want to retrieve information about the latest recorded instance, you can use the `instance` function for convenience:
+```
+> algebr$instance(meuse)
+  rec_num     IID                  class semantics                       command                                  timestamp
+2       2 meuse~2 SpatialPointsDataFrame S x Q set meuse$lzinc = log(meuse$zinc) ##------ Tue Aug 16 17:59:41 2016 ------##
+```
 ##4. Export and visualization of derivation graphs
 
 ##5. Known Issues
