@@ -132,6 +132,14 @@ If you only want to retrieve information about the latest recorded instance, you
   rec_num     IID                  class semantics                       command                                  timestamp
 2       2 meuse~2 SpatialPointsDataFrame S x Q set meuse$lzinc = log(meuse$zinc) ##------ Tue Aug 16 17:59:41 2016 ------##
 ```
+
+###3.5 Getting and setting semantics of objects
+
+The semantics of an object can be determined using the `estimateSemantics` function as the following:
+
+
+###3.6 Getting and setting semantics of functions
+
 ##4. Export and visualization of derivation graphs
 
 ##5. Known Issues
