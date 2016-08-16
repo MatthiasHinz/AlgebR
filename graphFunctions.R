@@ -769,6 +769,11 @@ algebr$estimateSemantics <- function(var, env=globalenv()){
   
   return(class(obj))
 }
+
+
+#TODO:
+algebr$getCallSemantics = function(x){}
+
 #jars of clay - frail
 captureSemantics <- function(fun){
   return(isTRUE(attr(fun,"SemanticWrapper")))
