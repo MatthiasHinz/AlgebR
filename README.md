@@ -112,7 +112,7 @@ toFile(gRlayout , layoutType="dot", filename="myDerivationGraph.svg", fileType="
 system(command = "dot -Tpdf myDerivationGraph.dot -o myDerivationGraph.pdf")
 
 ```
-###3.4 Versioning history of Variables
+###3.4 Versioning history of variables
 
 During an analysis, an object or variable can be overwritten or modified multiple times. When provenance tracking is enabled, AlgebR keeps a versioning history for every variable that is written to the global environment and updates it, whenever a change is noticed. The version history contains information about the 'class' and 'semantics' of the object denoted with the variable, the 'command' that caused the variable modifcation or creation and a 'timestamp', which says when this happened. Less intuitive are the attibutes 'rec_num' and 'IID': The former stands for 'record number' and denotes the number of the task or command that was recorded, starting from the first record; the latter stands for 'instance id' and denotes an identifier that is used to denote a specific instance of the variable in the versioning history. The IID is based on the variable name and also denotes nodes of the derivation graph that refer to a variable.
 
