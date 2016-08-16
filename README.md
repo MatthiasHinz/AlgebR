@@ -41,12 +41,13 @@ demo(meuse, ask=FALSE, echo=FALSE)
 meuse$lzinc = log(meuse$zinc)
 algebr$disableProvenance()
 gRlayout = algebr$getScriptGraph()
-toFile(gRlayout , layoutType="dot", filename="output/myDerivationGraph.svg", fileType="svg")
+toFile(gRlayout , layoutType="dot", filename="myDerivationGraph.dot", fileType="dot")
+system(command = "dot -Tpng myDerivationGraph.dot -o myDerivationGraph.png")
 algebr$versions(meuse)
 ```
-The resulting derivation graph, rendered and exported as an SVG-file, should look like the following:
+The resulting derivation graph, rendered and exported as an PNG-file, should look like the following:
 
-![Console Session](https://github.com/MatthiasHinz/AlgebR/raw/master/output/myDerivationGraph.svg)
+![Console Session](https://github.com/MatthiasHinz/AlgebR/raw/master/output/myDerivationGraph.png)
 
 ###2.2 Getting started with the examples from GitHub
  After installation all dependencies mentioned in section 1, download or checkout the github repository. The R working has to be set to the directory where all scripts and files are contained. Now you should be able to execute any of the example-scripts, e.g. `example-mini.R`, `SPODT-example.R` or `example-interpolation_algebR.R` 
