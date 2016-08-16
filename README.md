@@ -136,7 +136,17 @@ If you only want to retrieve information about the latest recorded instance, you
 ###3.5 Getting and setting semantics of objects
 
 The semantics of an object can be determined using the `estimateSemantics` function as the following:
+```
+> algebr$estimateSemantics(meuse)
+[1] "S x Q set"
+```
 
+By default, the estimateSemantics version uses a mapping from certain object properties, primarily the class, and semantic annotations. It is also possibe to annotate an object directy by setting a semantics-attribute
+```
+> attr(meuse,"semantics") <- "'a set"
+> algebr$estimateSemantics(meuse)
+[1] "'a set"
+```
 
 ###3.6 Getting and setting semantics of functions
 
