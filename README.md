@@ -26,7 +26,28 @@ install.packages("tree")
 
 ##2. Getting started
 ###2.1 Getting started with a minimalistic example
- 
+
+After installing all packages from section 1.1. and the sp-package you should be able to execute the following script.
+```
+source("https://github.com/MatthiasHinz/AlgebR/raw/master/graphFunctions.R")
+library(sp)
+log = function(x){
+  return(base::log(x))
+}
+captureSemantics(log) <- TRUE
+
+algebr$enableProvenance()
+demo(meuse, ask=FALSE, echo=FALSE)
+meuse$lzinc = log(meuse$zinc)
+algebr$disableProvenance()
+gRlayout = algebr$getScriptGraph()
+toFile(gRlayout , layoutType="dot", filename="output/myDerivationGraph.svg", fileType="svg")
+algebr$versions(meuse)
+```
+The resulting derivation graph, rendered and exported as an SVG-file, should look like the following:
+
+![Console Session](https://github.com/MatthiasHinz/AlgebR/raw/master/output/myDerivationGraph.svg)
+
 ###2.2 Getting started with the examples from GitHub
  After installation all dependencies mentioned in section 1, download or checkout the github repository. The R working has to be set to the directory where all scripts and files are contained. Now you should be able to execute any of the example-scripts, e.g. `example-mini.R`, `SPODT-example.R` or `example-interpolation_algebR.R` 
  
