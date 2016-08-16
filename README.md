@@ -147,8 +147,13 @@ By default, the estimateSemantics version uses a mapping from certain object pro
 > algebr$estimateSemantics(meuse)
 [1] "'a set"
 ```
+The semantics of an object are reflected in the white nodes of the derivation graphs
 
-###3.6 Getting and setting semantics of functions
+###3.6 Getting and setting semantics of function calls
+
+The semantics of unevaluated functions are treated the same way for object as in the previous section. 
+
+....
 
 ##4. Export and visualization of derivation graphs
 
