@@ -157,7 +157,47 @@ The semantics of unevaluated functions are treated the same way for object as in
 
 #### 3.6.2 Apply user-defined semantics
 
+```
+source("https://github.com/MatthiasHinz/AlgebR/raw/master/graphFunctions.R")
+log = function(x){
+  return(base::log(x))
+}
+captureSemantics(log, semantics=c("Q -> Q", "Q set -> Q set")) <- TRUE
 
+algebr$enableProvenance()
+t=123
+log(t) #no inconsistencies
+log(t, c("Q set -> Q set"))
+attr(t, "semantics") <-"myType"
+log(t)
+algebr$disableProvenance()
+
+gRlayout = algebr$getScriptGraph()
+toFile(gRlayout , layoutType="dot", filename="inconsistentGraph.dot", fileType="dot")
+system(command = "dot -Tpng inconsistentGraph.dot -o inconsistentGraph.png")
+```
+```
+> t=123
+> log(t) #no inconsistencies
+Call: Q -> Q
+[1] 4.812184
+> log(t, c("Q set -> Q set"))
+Call: Q -> Q: INCONSISTENT!
+[1] 4.812184
+Warnmeldung:
+In log(t, c("Q set -> Q set")) :
+  Inconsistent function semantics, given is  Q -> Q but expected was one of the following:  Q set -> Q set
+> attr(t, "semantics") <-"myType"
+> log(t)
+Call: myType -> myType: INCONSISTENT!
+[1] 4.812184
+attr(,"semantics")
+[1] "myType"
+Warnmeldung:
+In log(t) :
+  Inconsistent function semantics, given is  myType -> myType but expected was one of the following:  Q -> Q, Q set -> Q set
+```
+![Console Session](https://github.com/MatthiasHinz/AlgebR/raw/master/output/inconsistentGraph.png)
 
 ##4. Export and visualization of derivation graphs
 
