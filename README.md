@@ -194,7 +194,7 @@ system(command = "dot -Tpng inconsistentGraph.dot -o inconsistentGraph.png")
 
 ![Console Session](https://github.com/MatthiasHinz/AlgebR/raw/master/output/inconsistentGraph.png)
 
-##4. External visualization of derivation graphs
+##4. External visualization and analysis of derivation graphs
 
 Section 3.3. describes briefly how to export derivation graphs from R in different formats like pdf, svg and png. One output format that deserves more attention is the 'dot' or 'gv' format, which is native to the Graphviz software (http://www.graphviz.org/). A list of available for software for this format is available at http://www.graphviz.org/content/resources
 
