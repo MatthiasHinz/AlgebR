@@ -155,21 +155,33 @@ The semantics of an object are reflected in the white nodes of the derivation gr
 
 The semantics of unevaluated functions are treated the same way for object as in the previous section. However, in order to order to to cature call semantics, i.e. when a function is called/evaluated with given inputs, function wrappers have to be applied. The replacement function `captureProvenance(x) <- TRUE` puts such a wrapper around the function x. The wrapper has the same signature as the original function, thus can be executed normally. The semantics of in-and outputs are recorded internally and will be reflected in the derivation graph. However, in some cases the automated wrapping (see known issues) is not feasable. In this case it is recomended to wrap the function write a function wrapper manually and then apply the `captureProvenance` function.
 
-#### 3.6.2 Apply user-defined semantics
+#### 3.6.2 Define and check user-defined semantics
+
+It is possible to explicitely define the semantics which are expected for a function call. This will, however, not change the behaviour of the function itself, but the user will get notified through warnings and by reviewing the derivation graph about semantic inconsistensies.
+
+There are two ways to define the expected semantics, either as default semantics for a function wrapper within call itself, where it is only evaluated for one specific case:
+
+1) Given a function log (see full definition below), it is possible to define the default semantics when applying the semantic function wrapper as the following: `captureSemantics(log, semantics=c("Q -> Q", "Q set -> Q set")) <- TRUE`. It means that log function semantics: Given a Q-value it returns another Q-value and given a Q set it returns another Q set. In this case, Q would be a number.
+
+2) If the user wants to define semantics for the mentioned example function only for one call, it can be done as the following: 
+
+
+
+
 
 ```
 source("https://github.com/MatthiasHinz/AlgebR/raw/master/graphFunctions.R")
 log = function(x){
   return(base::log(x))
 }
-captureSemantics(log, semantics=c("Q -> Q", "Q set -> Q set")) <- TRUE
+captureSemantics(log, semantics = c("Q -> Q", "Q set -> Q set")) <- TRUE
 
 algebr$enableProvenance()
 t=123
-log(t) #no inconsistencies
-log(t, c("Q set -> Q set"))
+log(t) #no inconsistencies/warnings
+log(t, semantics = c("Q set -> Q set")) #warning, because the call semantics are Q -> Q, which is not expected
 attr(t, "semantics") <-"myType"
-log(t)
+log(t) #warning, because the call semantics are myType -> myType, which is not expected
 algebr$disableProvenance()
 
 gRlayout = algebr$getScriptGraph()
