@@ -203,7 +203,7 @@ https://apps.ubuntu.com/cat/applications/xdot/
 
 It is possible to import dot files to Cytoscape, (http://www.cytoscape.org/), which is an platform for comlpex network analysis and visualization that was originally designed for biological research. This requires installing cytoscape with the dot-app (http://apps.cytoscape.org/apps/dotapp). Unfortunally the dot-app has some limitations (see http://chianti.ucsd.edu/dot-documents/conversion_details.pdf)
 
-##5. Known Issues
+##5. Known issues
 
 ###5.1 Derivation graphs ploted in R
  The graphs as plotted in R does not display some line and arrow charactaristics. Also they don't display the semantic annotations at the moment. This is because the library RGraphviz does not implement all Graphics parameters supported by Graphviz
