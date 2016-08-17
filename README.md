@@ -160,14 +160,17 @@ The semantics of unevaluated functions are treated the same way for object as in
 It is possible to explicitely define the semantics which are expected for a function call. This will, however, not change the behaviour of the function itself, but the user will get notified through warnings and by reviewing the derivation graph about semantic inconsistensies.
 
 There are two ways to define the expected semantics, either as default semantics for a function wrapper within call itself, where it is only evaluated for one specific case:
+  
+  1) Given a function 'log' (see full definition below), it is possible to define the default semantics when applying the semantic function wrapper as the following: `captureSemantics(log, semantics=c("Q -> Q", "Q set -> Q set")) <- TRUE`. It means that log function semantics: Given a Q-value it returns another Q-value and given a Q set it returns another Q set. In this case, Q would be a number.
+  To determine the default semantics of a given function, the function `callSemantics` can be used. It will return the String-vector of all allowed call semantics, NULL if the sunction is not semantics-enabled and 'dynamic' if the function has no default call semantics defined. Example: 
+  ```
+  > algebr$callSemantics(log)
+  [1] "Q -> Q"         "Q set -> Q set" 
+  ```
+  
+  2) If the user wants to define semantics for a given semantics-enabled function 'log' only for one call, it can be done as the following by motifying the actual function call: `log(t, semantics = c("Q set -> Q set"))`. If the semantics function wrapper has defined default semantics, they will be ignored for this call.
 
-1) Given a function log (see full definition below), it is possible to define the default semantics when applying the semantic function wrapper as the following: `captureSemantics(log, semantics=c("Q -> Q", "Q set -> Q set")) <- TRUE`. It means that log function semantics: Given a Q-value it returns another Q-value and given a Q set it returns another Q set. In this case, Q would be a number.
-
-2) If the user wants to define semantics for the mentioned example function only for one call, it can be done as the following: 
-
-
-
-
+The following scipt demonstrates how to define the expected call semantics and how semantic inconsistencies are handled. The resulting derivation graph is displayed below the script.
 
 ```
 source("https://github.com/MatthiasHinz/AlgebR/raw/master/graphFunctions.R")
@@ -188,27 +191,7 @@ gRlayout = algebr$getScriptGraph()
 toFile(gRlayout , layoutType="dot", filename="inconsistentGraph.dot", fileType="dot")
 system(command = "dot -Tpng inconsistentGraph.dot -o inconsistentGraph.png")
 ```
-```
-> t=123
-> log(t) #no inconsistencies
-Call: Q -> Q
-[1] 4.812184
-> log(t, c("Q set -> Q set"))
-Call: Q -> Q: INCONSISTENT!
-[1] 4.812184
-Warnmeldung:
-In log(t, c("Q set -> Q set")) :
-  Inconsistent function semantics, given is  Q -> Q but expected was one of the following:  Q set -> Q set
-> attr(t, "semantics") <-"myType"
-> log(t)
-Call: myType -> myType: INCONSISTENT!
-[1] 4.812184
-attr(,"semantics")
-[1] "myType"
-Warnmeldung:
-In log(t) :
-  Inconsistent function semantics, given is  myType -> myType but expected was one of the following:  Q -> Q, Q set -> Q set
-```
+
 ![Console Session](https://github.com/MatthiasHinz/AlgebR/raw/master/output/inconsistentGraph.png)
 
 ##4. Export and visualization of derivation graphs
