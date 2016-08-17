@@ -771,8 +771,22 @@ algebr$estimateSemantics <- function(var, env=globalenv()){
 }
 
 
-#TODO:
-algebr$getCallSemantics = function(x){}
+algebr$callSemantics = function(x){
+  if(!captureSemantics(x)){
+    warning("This function is not semantics-enabled. Please use 'captureSemantics' in order to create a semantic wrapper.")
+    return(NULL)
+  }
+  return(attr(x,"callSemantics"))
+}
+
+# setting call semantics is not yet supported, because the captureSemantics object cannot be accessed from the function body (I don't know how) 
+# setting semantics permanently has to be done by creating a new semantic wrapper
+#algebr$`callSemantics<-` = function(x, semantics){
+#  if(!captureSemantics(x)){
+#    stop("This function is not semantics-enabled. Please use 'captureSemantics' in order to create a semantic wrapper.")
+#  }
+#  return(attr(x,"callSemantics") <- semantics)
+#}
 
 #jars of clay - frail
 captureSemantics <- function(fun){
@@ -783,6 +797,7 @@ captureSemantics <- function(fun){
   if(is.null(semantics)){
     semantics=NA
   }
+  
   bool=value #shall function be wrapped or not
   #returieving the function names seems not to be possible from here
   #fname=as.character(substitute(fun,env = globalenv()))
@@ -822,15 +837,26 @@ captureSemantics <- function(fun){
     
     output = do.call(wFun, args, envir = environment())
     
-    if(is.na(semantics)){ ## estimate semantics from in/output
-      s_output = algebr$estimateSemantics(output)
-      s_inputs = sapply(args, function(arg){algebr$estimateSemantics(arg, env = environment())})
-      semantics = paste(paste(s_inputs, collapse = " -> "), s_output, sep=" -> ")
+
+    s_output = algebr$estimateSemantics(output)
+    s_inputs = sapply(args, function(arg){algebr$estimateSemantics(arg, env = environment())})
+    call_semantics = paste(paste(s_inputs, collapse = " -> "), s_output, sep=" -> ")
+    
+    if(length(semantics==1) && is.na(semantics)){ ## estimate semantics from in/output
+      semantics = call_semantics
+    }else{
+      s=str_to_upper(str_trim(semantics))
+      sc=str_to_upper(str_trim(call_semantics))
+      if(!sc %in% s){
+        warning(paste("Inconsistent function semantics, given is ",call_semantics,"but expected was one of the following: ",paste(semantics,collapse=", ")))
+        call_semantics = paste0(call_semantics, ": INCONSISTENT!")
+      }
     }
+    
     ## The call is only recordet if it occurs from the global environment (to avoid confusion if they are called internaly or recursively(?))
     if(isTRUE(algebr$isEnabled) && identical(parent.frame(),globalenv())){
-      cat(paste0(semantics,"\n"))
-      callSemantics=data.frame(rec_num=algebr$rec_num, semantics,fid, time = timestamp(quiet = TRUE), stringsAsFactors = FALSE)
+      cat(paste0("Call: ",call_semantics,"\n"))
+      callSemantics=data.frame(rec_num=algebr$rec_num, semantics=call_semantics,fid=fid, time = timestamp(quiet = TRUE), stringsAsFactors = FALSE)
       algebr$callStack=rbind(algebr$callStack,callSemantics)
     }
     
@@ -842,6 +868,12 @@ captureSemantics <- function(fun){
   #print(paste(deparse(formals_w), "formals"))
   formals(wrapper) <- formals_w
   attr(wrapper,"SemanticWrapper") <- TRUE
+  if(length(semantics) == 0 && is.na(semantics)){
+    attr(wrapper,"callSemantics") <- "dynamic"
+  }else{
+    attr(wrapper,"callSemantics") <- semantics
+  }
+  
   attr(wrapper,"wFun") <- wFun
   attr(wrapper,"fid") <- fid
   fun=wrapper
