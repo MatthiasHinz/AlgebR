@@ -12,13 +12,13 @@ source("https://bioconductor.org/biocLite.R")
 biocLite("Rgraphviz")
 ```
 ### 1.2 Dependencies of workflow examples 
-#### Interpolation example (mss package)
+#### 1.2.1 Interpolation example (mss package)
 ```
 install.packages(c("xts","gstat", "sp", "devtools"))
 install.packages("rgeos") #optional
 devtools::install_github("edzer/mss")
 ```
-####Spatial partitioning exammple (SPODT package)
+#### 1.2.2 Spatial partitioning example (SPODT package)
 ```
 install.packages("SPODT")
 install.packages("tree")
