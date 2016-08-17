@@ -151,9 +151,13 @@ The semantics of an object are reflected in the white nodes of the derivation gr
 
 ###3.6 Getting and setting semantics of function calls
 
-The semantics of unevaluated functions are treated the same way for object as in the previous section. 
+#### 3.6.1 Apply semantic function wrappers
 
-....
+The semantics of unevaluated functions are treated the same way for object as in the previous section. However, in order to order to to cature call semantics, i.e. when a function is called/evaluated with given inputs, function wrappers have to be applied. The replacement function `captureProvenance(x) <- TRUE` puts such a wrapper around the function x. The wrapper has the same signature as the original function, thus can be executed normally. The semantics of in-and outputs are recorded internally and will be reflected in the derivation graph. However, in some cases the automated wrapping (see known issues) is not feasable. In this case it is recomended to wrap the function write a function wrapper manually and then apply the `captureProvenance` function.
+
+#### 3.6.2 Apply user-defined semantics
+
+
 
 ##4. Export and visualization of derivation graphs
 
