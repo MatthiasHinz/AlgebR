@@ -208,7 +208,7 @@ It is possible to import dot files to Cytoscape, (http://www.cytoscape.org/), wh
 ###5.1 Derivation graphs ploted in R
  The graphs as plotted in R does not display some line and arrow charactaristics. Also they don't display the semantic annotations at the moment. This is because the library RGraphviz does not implement all Graphics parameters supported by Graphviz
  
-###5.2 CodeDepends/mss - inconpatiblity
+###5.2 CodeDepends/mss - incompatiblity
 The script example_src_blockKriging.R throws errors when using the [/[[-operator on some objects. It seem like the reason is an incompatiblity between the packages 'CodeDepends' and 'mss'.
 
 ```
