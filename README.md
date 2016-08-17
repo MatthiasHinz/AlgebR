@@ -194,9 +194,27 @@ system(command = "dot -Tpng inconsistentGraph.dot -o inconsistentGraph.png")
 
 ![Console Session](https://github.com/MatthiasHinz/AlgebR/raw/master/output/inconsistentGraph.png)
 
-##4. Export and visualization of derivation graphs
+##4. External visualization of derivation graphs
+
+Section 3.3. describes briefly how to export derivation graphs from R in different formats like pdf, svg and png. One output format that deserves more attention is the 'dot' or 'gv' format, which is native to the Graphviz software (http://www.graphviz.org/). A list of available for software for this format is available at http://www.graphviz.org/content/resources
+
+For Ubuntu users, it is practical to install the XDOT app, which allows viewing and navigating through graphs by zooming/panning. However, it does not implement editing or layout functionalities.
+https://apps.ubuntu.com/cat/applications/xdot/
+
+It is possible to import dot files to Cytoscape, (http://www.cytoscape.org/), which is an platform for comlpex network analysis and visualization that was originally designed for biological research. This requires installing cytoscape with the dot-app (http://apps.cytoscape.org/apps/dotapp). Unfortunally the dot-app has some limitations (see http://chianti.ucsd.edu/dot-documents/conversion_details.pdf)
 
 ##5. Known Issues
 
 ###5.1 Derivation graphs ploted in R
  The graphs as plotted in R does not display some line and arrow charactaristics. Also they don't display the semantic annotations at the moment. This is because the library RGraphviz does not implement all Graphics parameters supported by Graphviz
+ 
+###5.2 CodeDepends/mss - inconpatiblity
+The script example_src_blockKriging.R throws errors when using the [/[[-operator on some objects. It seem like the reason is an incompatiblity between the packages 'CodeDepends' and 'mss'.
+
+```
+        > zincBlockData = zincBlockData[!is.na(zincBlockData[[1]]),]
+            Fehler in x@observations[i, j, ..., drop = drop] :
+              Argument "j" fehlt (ohne Standardwert)
+```
+###5.3 CaptureProvenace function
+In some cases, applying a semantics wrapper with the `captureProvenance` function does not work as expected: Primitive R functions are not yet supported for different reasons. Some functions wrappers throw unexpected errors when called, in particular those which have extraordinary inputs such as the ... - parameter. Exact reasons still have to be examined. A workaround is to write manually a wrapper a wrapper around the function using the arguments you want to pass and then apply the `captureProvenance` function.
