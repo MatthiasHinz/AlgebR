@@ -80,7 +80,7 @@ interpolator = getInterpolator(modelSemivariogram(zincPointData), zincPointData)
 #class(interpolator) # untyped, but is S -> Q
 
 locInterest = SFieldData(geometry(meuse.grid), geometry(meuse.grid), cellsArePoints = TRUE)
-intZincPointData = interpolator(locInterest, semantics = "S -> Q")
+intZincPointData = interpolator(locInterest, semantics = "S x Q -> Q")
 #class(intZincPointData)
 spplot(intZincPointData@observations[1])
 
