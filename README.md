@@ -1,7 +1,12 @@
 # AlgebR
+AlgebR is an experimental library for R that generates derivation graphs for spatio-temporal statistics. 
 
+The library is used to record provenance through task-callbacks, while commands (or tasks) are executed on the R-console. Part of this provenance information is a version history maintained for each variable (see section 3.4) that serves to answer important provenance-related questions, namely where, when and how an object has been created or modified. Based on the collected provenance information a derivation graph is constructed that describes all objects, operations, calls and their parameters involved in the execution. The graph is enriched with semantic annotations displayed in rectangular brackets '[',']'. These annotations serve to clarify the semantic meaning of a piece of data in compliance with Scheider et al. [1] and also to detect semantic inconsistencies during the workflow execution (See section 3.6).
 
 ## 1. Installation
+
+The following dependencies are mandatory for executing methods of the AlgebR library and the example scripts uploaded on GitHub.
+
 ### 1.1 Library dependencies
 ```
 install.packages("codetools")
@@ -11,7 +16,7 @@ devtools::install_github('duncantl/CodeDepends')
 source("https://bioconductor.org/biocLite.R")
 biocLite("Rgraphviz")
 ```
-### 1.2 Dependencies of workflow examples 
+### 1.2 Dependencies of workflow examples on GitHub
 #### 1.2.1 Interpolation example (mss package)
 ```
 install.packages(c("xts","gstat", "sp", "devtools"))
@@ -27,7 +32,8 @@ install.packages("tree")
 ##2. Getting started
 ###2.1 Getting started with a minimalistic example
 
-After installing all packages from section 1.1. and the sp-package you should be able to execute the following script.
+After installing all packages from section 1.1. and the sp-package, it is possible to execute the following example on any current R installation (recently tested with R 3.3.1 'Bug in Your Hair'). The code have to be copied to the console and cannot be sourced without errors. (See known issues, section 5.6)
+
 ```
 source("https://github.com/MatthiasHinz/AlgebR/raw/master/graphFunctions.R")
 library(sp)
@@ -50,27 +56,27 @@ The resulting derivation graph, rendered and exported as an PNG-file, should loo
 ![Console Session](https://github.com/MatthiasHinz/AlgebR/raw/master/output/myDerivationGraph.png)
 
 ###2.2 Getting started with the examples from GitHub
- After installation all dependencies mentioned in section 1, download or checkout the github repository. The R working has to be set to the directory where all scripts and files are contained. Now you should be able to execute any of the example-scripts, e.g. `example-mini.R`, `SPODT-example.R` or `example-interpolation_algebR.R` 
+ After installing all dependencies mentioned in section 1, download or checkout the GitHub repository. The R working has to be set to the directory where all scripts and files are contained. Now it is possible to execute any of the example-scripts, e.g. `example-mini.R`, `SPODT-example.R` or `example-interpolation_algebR.R` 
  
- All derivation graphs will be exported and written to the output-folder in different formats (currently dot, svg and pdf). Please note that the plot in R does not display the derivation grahps with all details, so always take the exported files as referenece (See known issues in section 5.1) 
+ All derivation graphs will be exported and written to the output-folder in different formats (currently dot, svg and pdf). It is important to mention that the plot in R does not display the derivation grahps with all details, including the semantic annotations (See known issues in section 5.1).
  
 
 ##3. Usage
 
 ###3.1 load library
 
-In order to load AlgebR into R you just need to download and source the file `graphFunctions.R`.
+In order to load AlgebR into R, it is necessary to download and source the file `graphFunctions.R`.
 `source("graphFunctions.R") #offline`
 
-If you want, you can also source the file directly from github, which is faster and assures you always work with the lates version
+Alternatively, the script can be sourced directly from github, which is faster and assures to allway work with the lates version.
 `source("https://github.com/MatthiasHinz/AlgebR/raw/master/graphFunctions.R") #directly load from gitub`
 
-If you now inspect the workspace with `ls()`, you should have the following output, if you started a clean R session.
+When inspecting the workspace with `ls()`, the following output should appear, provided that R was started with a clean session.
 ```
 > ls()
 [1] "algebr"             "captureSemantics"   "captureSemantics<-"
 ```
-With exception of the `captureSemantics` functions, all functions and objects are bundled wihin the `algebr`-envrionment. The easiest way to acess them is using `algebr$...`. You can also mask the library on the global environment using `attach(algebr)`, but it is not recommended, as it will result in an overfull workspace and may cause unexpected behaviour.
+With exception of the `captureSemantics` functions, all functions and objects are bundled wihin the `algebr`-envrionment. The easiest way to acess them is using `algebr$...`. It is possible to mask the library on the global environment using `attach(algebr)`, but it is not recommended, as it will result in an overfull workspace and may cause unexpected behaviour.
 
 ###3.2 Provenance recording
 
@@ -133,6 +139,8 @@ If you only want to retrieve information about the latest recorded instance, you
 2       2 meuse~2 SpatialPointsDataFrame S x Q set meuse$lzinc = log(meuse$zinc) ##------ Tue Aug 16 17:59:41 2016 ------##
 ```
 
+It is also possible to display all commands recorded with AlgebR in sequence. This is done with `algebr$history()`. The 'rec_num' attribute of each variable version history refers to the indices of the commands in this record history.
+
 ###3.5 Getting and setting semantics of objects
 
 The semantics of an object can be determined using the `estimateSemantics` function as the following:
@@ -147,7 +155,7 @@ By default, the estimateSemantics version uses a mapping from certain object pro
 > algebr$estimateSemantics(meuse)
 [1] "'a set"
 ```
-The semantics of an object are reflected in the white nodes of the derivation graphs
+The semantics of an object are reflected in the white nodes of the derivation graphs.
 
 ###3.6 Getting and setting semantics of function calls
 
@@ -218,3 +226,9 @@ The script example_src_blockKriging.R throws errors when using the [/[[-operator
 ```
 ###5.3 CaptureProvenace function
 In some cases, applying a semantics wrapper with the `captureProvenance` function does not work as expected: Primitive R functions are not yet supported for different reasons. Some functions wrappers throw unexpected errors when called, in particular those which have extraordinary inputs such as the ... - parameter. Exact reasons still have to be examined. A workaround is to write manually a wrapper a wrapper around the function using the arguments you want to pass and then apply the `captureProvenance` function.
+
+###5.4 Provanence recoding not possible in when sourcing scripts
+Unfotunately it is not possible to use AlgebR in batch-mode or when sourcing the commands that should be recorded with the `source`-function. This is because provenance information is collected from a callback function initiated by `addTaskCallback` in R (part of the 'base'-package). This mechanism does not work in the under the mentioned conditions.
+
+##6. References
+[1] Scheider, Simon, et al. "Modeling spatiotemporal information generation." International Journal of Geographical Information Science (2016): 1-29.
