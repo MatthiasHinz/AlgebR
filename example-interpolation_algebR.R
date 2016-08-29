@@ -49,7 +49,7 @@ getInterpolator = function(params, pointData) {
     interpolate(f, pointData, locOfInterest, model = params)
     # interpolate(f, pointData, locOfInterest, model = params, ndiscr=4, verbose=TRUE)
   }
-  captureSemantics(out) <-TRUE
+  captureSemantics(out, semantics = "S -> (S, Q)") <-TRUE
   attr(out, "semantics") <- "SField"
   # is, strictly not S -> Q but S -> (S,Q)
   return(out)
@@ -80,7 +80,7 @@ interpolator = getInterpolator(modelSemivariogram(zincPointData), zincPointData)
 #class(interpolator) # untyped, but is S -> Q
 
 locInterest = SFieldData(geometry(meuse.grid), geometry(meuse.grid), cellsArePoints = TRUE)
-intZincPointData = interpolator(locInterest, semantics = "S x Q -> Q")
+intZincPointData = interpolator(locInterest, semantics = "S -> (S, Q)")
 #class(intZincPointData)
 spplot(intZincPointData@observations[1])
 

@@ -868,7 +868,7 @@ captureSemantics <- function(fun){
   #print(paste(deparse(formals_w), "formals"))
   formals(wrapper) <- formals_w
   attr(wrapper,"SemanticWrapper") <- TRUE
-  if(length(semantics) == 0 && is.na(semantics)){
+  if(length(semantics) == 1 && is.na(semantics)){
     attr(wrapper,"callSemantics") <- "dynamic"
   }else{
     attr(wrapper,"callSemantics") <- semantics
