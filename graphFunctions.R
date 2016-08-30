@@ -105,7 +105,8 @@ algebr$enableProvenance <- function(){
     algebr$scriptGraph = algebr$newDerivationGraph()
   if(is.null(algebr$callStack))
     algebr$callStack = data.frame() 
-  
+  if(is.null(algebr$semanticPedigree))
+    algebr$semanticPedigree = list()
   
   if(!isTRUE(algebr$isEnabled)){
     algebr$callback <- addTaskCallback(algebr$provenanceCallback())
@@ -151,6 +152,7 @@ algebr$reset <-function(){
   algebr$history_list = list()
   algebr$scriptGraph = algebr$newDerivationGraph()
   algebr$callStack = data.frame()
+  algebr$semanticPedigree = list()
 }
 
 
@@ -880,6 +882,30 @@ captureSemantics <- function(fun){
   return(fun)
 }
 
+addSemanticPedigree <- function(var, attr="ALL", name = NA, procedure){
+  varname = as.character(substitute(var))
+  if(is.null(algebr$semanticPedigree[[varname]]))
+    algebr$semanticPedigree[[varname]] = data.frame()
+  
+  record = data.frame(attr=attr, name=name, procedure=procedure)
+  algebr$semanticPedigree[[varname]] = rbind(algebr$semanticPedigree[[varname]], record)
+}
+
+getSemanticPedigree <- function(var, attr="ALL"){
+  varname = as.character(substitute(var))
+  if(is.null(algebr$semanticPedigree))
+    return(NULL)
+  
+  out = algebr$semanticPedigree[[varname]]
+  if(attr=="ALL"){
+    return(out)
+  }
+  sel1 = out$attr == "ALL"
+  sel2= out$att == attr
+  sel = sel1 | sel2 #select all records refering to either the specified attribute or "ALL" attributes
+  out = out[sel,]
+  return(out)
+}
 
 ###
 # Utility functions

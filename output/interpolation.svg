@@ -8,8 +8,8 @@
  viewBox="0.00 0.00 290.00 396.32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph1" class="graph" transform="scale(0.231764 0.231764) rotate(0) translate(4 1706)">
 <title>f</title>
-<!-- fcall_rDuyL2 -->
-<g id="node1" class="node"><title>fcall_rDuyL2</title>
+<!-- fcall_6oJ6oS -->
+<g id="node1" class="node"><title>fcall_6oJ6oS</title>
 <ellipse fill="orange" stroke="black" cx="558.563" cy="-1594" rx="32.2385" ry="18"/>
 <text text-anchor="middle" x="558.563" y="-1589.8" font-family="Times,serif" font-size="14.00">demo</text>
 </g>
@@ -19,8 +19,8 @@
 <text text-anchor="middle" x="363.563" y="-1512.2" font-family="Times,serif" font-size="14.00">crs </text>
 <text text-anchor="middle" x="363.563" y="-1495.4" font-family="Times,serif" font-size="14.00">[&#39;a]</text>
 </g>
-<!-- fcall_rDuyL2&#45;&gt;crs -->
-<g id="edge1" class="edge"><title>fcall_rDuyL2&#45;&gt;crs:center</title>
+<!-- fcall_6oJ6oS&#45;&gt;crs -->
+<g id="edge1" class="edge"><title>fcall_6oJ6oS&#45;&gt;crs:center</title>
 <path fill="none" stroke="red" stroke-dasharray="5,2" d="M527.703,-1588.28C500.361,-1583.3 459.88,-1573.9 427.563,-1558 414.856,-1551.75 402.193,-1542.78 391.526,-1534.22"/>
 <polygon fill="red" stroke="red" points="393.723,-1531.5 383.791,-1527.81 389.256,-1536.89 393.723,-1531.5"/>
 </g>
@@ -30,8 +30,8 @@
 <text text-anchor="middle" x="558.563" y="-1512.2" font-family="Times,serif" font-size="14.00">meuse </text>
 <text text-anchor="middle" x="558.563" y="-1495.4" font-family="Times,serif" font-size="14.00">[S x Q set]</text>
 </g>
-<!-- fcall_rDuyL2&#45;&gt;meuse -->
-<g id="edge2" class="edge"><title>fcall_rDuyL2&#45;&gt;meuse:center</title>
+<!-- fcall_6oJ6oS&#45;&gt;meuse -->
+<g id="edge2" class="edge"><title>fcall_6oJ6oS&#45;&gt;meuse:center</title>
 <path fill="none" stroke="red" stroke-dasharray="5,2" d="M558.563,-1575.6C558.563,-1567.46 558.563,-1557.43 558.563,-1547.65"/>
 <polygon fill="red" stroke="red" points="562.063,-1547.63 558.563,-1537.63 555.063,-1547.63 562.063,-1547.63"/>
 </g>
@@ -41,8 +41,8 @@
 <text text-anchor="middle" x="313.563" y="-1434.2" font-family="Times,serif" font-size="14.00">meuse.area </text>
 <text text-anchor="middle" x="313.563" y="-1417.4" font-family="Times,serif" font-size="14.00">[R set]</text>
 </g>
-<!-- fcall_rDuyL2&#45;&gt;meuse.area -->
-<g id="edge3" class="edge"><title>fcall_rDuyL2&#45;&gt;meuse.area:center</title>
+<!-- fcall_6oJ6oS&#45;&gt;meuse.area -->
+<g id="edge3" class="edge"><title>fcall_6oJ6oS&#45;&gt;meuse.area:center</title>
 <path fill="none" stroke="red" stroke-dasharray="5,2" d="M540.484,-1578.77C511.517,-1556.23 452.567,-1511.47 399.563,-1478 387.754,-1470.54 374.677,-1463.04 362.359,-1456.28"/>
 <polygon fill="red" stroke="red" points="364.012,-1453.19 353.553,-1451.5 360.674,-1459.35 364.012,-1453.19"/>
 </g>
@@ -52,8 +52,8 @@
 <text text-anchor="middle" x="795.563" y="-1512.2" font-family="Times,serif" font-size="14.00">meuse.grid </text>
 <text text-anchor="middle" x="795.563" y="-1495.4" font-family="Times,serif" font-size="14.00">[S x Q set]</text>
 </g>
-<!-- fcall_rDuyL2&#45;&gt;meuse.grid -->
-<g id="edge4" class="edge"><title>fcall_rDuyL2&#45;&gt;meuse.grid:center</title>
+<!-- fcall_6oJ6oS&#45;&gt;meuse.grid -->
+<g id="edge4" class="edge"><title>fcall_6oJ6oS&#45;&gt;meuse.grid:center</title>
 <path fill="none" stroke="red" stroke-dasharray="5,2" d="M585.289,-1583.53C622.514,-1570.33 690.872,-1546.11 739.54,-1528.86"/>
 <polygon fill="red" stroke="red" points="740.739,-1532.14 748.996,-1525.5 738.401,-1525.55 740.739,-1532.14"/>
 </g>
@@ -63,40 +63,40 @@
 <text text-anchor="middle" x="977.563" y="-1512.2" font-family="Times,serif" font-size="14.00">meuse.riv </text>
 <text text-anchor="middle" x="977.563" y="-1495.4" font-family="Times,serif" font-size="14.00">[R set]</text>
 </g>
-<!-- fcall_rDuyL2&#45;&gt;meuse.riv -->
-<g id="edge5" class="edge"><title>fcall_rDuyL2&#45;&gt;meuse.riv:center</title>
+<!-- fcall_6oJ6oS&#45;&gt;meuse.riv -->
+<g id="edge5" class="edge"><title>fcall_6oJ6oS&#45;&gt;meuse.riv:center</title>
 <path fill="none" stroke="red" stroke-dasharray="5,2" d="M589.229,-1588.12C644.081,-1579.23 762.523,-1559.34 861.563,-1538 881,-1533.81 902.132,-1528.7 920.969,-1523.94"/>
 <polygon fill="red" stroke="red" points="922.053,-1527.27 930.879,-1521.41 920.325,-1520.49 922.053,-1527.27"/>
 </g>
-<!-- lt_ef30WF -->
-<g id="node2" class="node"><title>lt_ef30WF</title>
+<!-- lt_uMjWZ1 -->
+<g id="node2" class="node"><title>lt_uMjWZ1</title>
 <ellipse fill="white" stroke="black" cx="424.563" cy="-1684" rx="35.5584" ry="18"/>
 <text text-anchor="middle" x="424.563" y="-1679.8" font-family="Times,serif" font-size="14.00">meuse</text>
 </g>
-<!-- lt_ef30WF&#45;&gt;fcall_rDuyL2 -->
-<g id="edge6" class="edge"><title>lt_ef30WF&#45;&gt;fcall_rDuyL2:center</title>
+<!-- lt_uMjWZ1&#45;&gt;fcall_6oJ6oS -->
+<g id="edge6" class="edge"><title>lt_uMjWZ1&#45;&gt;fcall_6oJ6oS:center</title>
 <path fill="none" stroke="black" d="M445.5,-1669.25C468.151,-1654.37 504.415,-1630.56 529.747,-1613.92"/>
 <polygon fill="none" stroke="black" points="531.774,-1616.78 538.211,-1608.37 527.931,-1610.93 531.774,-1616.78"/>
 <text text-anchor="middle" x="518.561" y="-1634.8" font-family="Times,serif" font-size="14.00">topic</text>
 </g>
-<!-- lt_1LEnYD -->
-<g id="node3" class="node"><title>lt_1LEnYD</title>
+<!-- lt_QaFIET -->
+<g id="node3" class="node"><title>lt_QaFIET</title>
 <ellipse fill="white" stroke="black" cx="558.563" cy="-1684" rx="40.3147" ry="18"/>
 <text text-anchor="middle" x="558.563" y="-1679.8" font-family="Times,serif" font-size="14.00">FALSE</text>
 </g>
-<!-- lt_1LEnYD&#45;&gt;fcall_rDuyL2 -->
-<g id="edge7" class="edge"><title>lt_1LEnYD&#45;&gt;fcall_rDuyL2:center</title>
+<!-- lt_QaFIET&#45;&gt;fcall_6oJ6oS -->
+<g id="edge7" class="edge"><title>lt_QaFIET&#45;&gt;fcall_6oJ6oS:center</title>
 <path fill="none" stroke="black" d="M558.563,-1665.61C558.563,-1653.24 558.563,-1636.37 558.563,-1622.22"/>
 <polygon fill="none" stroke="black" points="562.063,-1622.05 558.563,-1612.05 555.063,-1622.05 562.063,-1622.05"/>
 <text text-anchor="middle" x="571.778" y="-1634.8" font-family="Times,serif" font-size="14.00">echo</text>
 </g>
-<!-- lt_6mZKUm -->
-<g id="node4" class="node"><title>lt_6mZKUm</title>
+<!-- lt_fgltQC -->
+<g id="node4" class="node"><title>lt_fgltQC</title>
 <ellipse fill="white" stroke="black" cx="699.563" cy="-1684" rx="40.3147" ry="18"/>
 <text text-anchor="middle" x="699.563" y="-1679.8" font-family="Times,serif" font-size="14.00">FALSE</text>
 </g>
-<!-- lt_6mZKUm&#45;&gt;fcall_rDuyL2 -->
-<g id="edge8" class="edge"><title>lt_6mZKUm&#45;&gt;fcall_rDuyL2:center</title>
+<!-- lt_fgltQC&#45;&gt;fcall_6oJ6oS -->
+<g id="edge8" class="edge"><title>lt_fgltQC&#45;&gt;fcall_6oJ6oS:center</title>
 <path fill="none" stroke="black" d="M676.909,-1668.86C652.815,-1653.82 614.604,-1629.98 588.148,-1613.46"/>
 <polygon fill="none" stroke="black" points="589.659,-1610.28 579.323,-1607.96 585.953,-1616.22 589.659,-1610.28"/>
 <text text-anchor="middle" x="650.893" y="-1634.8" font-family="Times,serif" font-size="14.00">ask</text>
@@ -112,48 +112,48 @@
 <path fill="none" stroke="black" stroke-dasharray="5,2" d="M557.216,-1478.34C553.662,-1423.31 540.976,-1300.18 496.563,-1208 487.71,-1189.63 473.912,-1171.87 460.974,-1157.53"/>
 <polygon fill="black" stroke="black" points="463.284,-1154.88 453.912,-1149.94 458.157,-1159.64 463.284,-1154.88"/>
 </g>
-<!-- fcall_Y5n8hd -->
-<g id="node12" class="node"><title>fcall_Y5n8hd</title>
+<!-- fcall_ynFsGj -->
+<g id="node12" class="node"><title>fcall_ynFsGj</title>
 <ellipse fill="orange" stroke="black" cx="411.563" cy="-1352" rx="75.086" ry="18"/>
 <text text-anchor="middle" x="411.563" y="-1347.8" font-family="Times,serif" font-size="14.00">log(meuse$zinc)</text>
 </g>
-<!-- meuse&#45;&gt;fcall_Y5n8hd -->
-<g id="edge10" class="edge"><title>meuse&#45;&gt;fcall_Y5n8hd:center</title>
+<!-- meuse&#45;&gt;fcall_ynFsGj -->
+<g id="edge10" class="edge"><title>meuse&#45;&gt;fcall_ynFsGj:center</title>
 <path fill="none" stroke="black" d="M534.289,-1481.57C506.709,-1452.68 462.016,-1405.86 434.852,-1377.4"/>
 <polygon fill="none" stroke="black" points="437.121,-1374.71 427.684,-1369.89 432.057,-1379.54 437.121,-1374.71"/>
 </g>
-<!-- fcall_mRMEXD -->
-<g id="node14" class="node"><title>fcall_mRMEXD</title>
+<!-- fcall_sS1ZRm -->
+<g id="node14" class="node"><title>fcall_sS1ZRm</title>
 <ellipse fill="orange" stroke="black" cx="427.563" cy="-854" rx="212.25" ry="29.5"/>
 <text text-anchor="middle" x="427.563" y="-858.2" font-family="Times,serif" font-size="14.00">SFieldData</text>
 <text text-anchor="middle" x="427.563" y="-841.4" font-family="Times,serif" font-size="14.00">[bool &#45;&gt; R set &#45;&gt; S x Q set &#45;&gt; S x Q x SExtend set]</text>
 </g>
-<!-- meuse.area&#45;&gt;fcall_mRMEXD -->
-<g id="edge11" class="edge"><title>meuse.area&#45;&gt;fcall_mRMEXD:center</title>
+<!-- meuse.area&#45;&gt;fcall_sS1ZRm -->
+<g id="edge11" class="edge"><title>meuse.area&#45;&gt;fcall_sS1ZRm:center</title>
 <path fill="none" stroke="black" d="M297.312,-1401.5C283.387,-1375.31 265.563,-1334.29 265.563,-1296 265.563,-1296 265.563,-1296 265.563,-967 265.563,-929.021 296.06,-902.915 330.59,-885.528"/>
 <polygon fill="none" stroke="black" points="332.407,-888.539 339.925,-881.073 329.393,-882.221 332.407,-888.539"/>
 <text text-anchor="middle" x="286.561" y="-1176.8" font-family="Times,serif" font-size="14.00">domain</text>
 </g>
-<!-- fcall_1peDew -->
-<g id="node23" class="node"><title>fcall_1peDew</title>
+<!-- fcall_JyowhW -->
+<g id="node23" class="node"><title>fcall_JyowhW</title>
 <ellipse fill="orange" stroke="black" cx="1121.56" cy="-1352" rx="86.25" ry="29.5"/>
 <text text-anchor="middle" x="1121.56" y="-1356.2" font-family="Times,serif" font-size="14.00">geometry</text>
 <text text-anchor="middle" x="1121.56" y="-1339.4" font-family="Times,serif" font-size="14.00">[S x Q set &#45;&gt; S set]</text>
 </g>
-<!-- meuse.grid&#45;&gt;fcall_1peDew -->
-<g id="edge12" class="edge"><title>meuse.grid&#45;&gt;fcall_1peDew:center</title>
+<!-- meuse.grid&#45;&gt;fcall_JyowhW -->
+<g id="edge12" class="edge"><title>meuse.grid&#45;&gt;fcall_JyowhW:center</title>
 <path fill="none" stroke="black" d="M836.851,-1487.5C894.088,-1460.46 997.844,-1411.44 1063.05,-1380.64"/>
 <polygon fill="none" stroke="black" points="1064.83,-1383.67 1072.38,-1376.24 1061.84,-1377.34 1064.83,-1383.67"/>
 <text text-anchor="middle" x="1024.51" y="-1425.8" font-family="Times,serif" font-size="14.00">obj</text>
 </g>
-<!-- fcall_keRiRN -->
-<g id="node24" class="node"><title>fcall_keRiRN</title>
+<!-- fcall_PkPW7P -->
+<g id="node24" class="node"><title>fcall_PkPW7P</title>
 <ellipse fill="orange" stroke="black" cx="849.563" cy="-1352" rx="86.25" ry="29.5"/>
 <text text-anchor="middle" x="849.563" y="-1356.2" font-family="Times,serif" font-size="14.00">geometry</text>
 <text text-anchor="middle" x="849.563" y="-1339.4" font-family="Times,serif" font-size="14.00">[S x Q set &#45;&gt; S set]</text>
 </g>
-<!-- meuse.grid&#45;&gt;fcall_keRiRN -->
-<g id="edge13" class="edge"><title>meuse.grid&#45;&gt;fcall_keRiRN:center</title>
+<!-- meuse.grid&#45;&gt;fcall_PkPW7P -->
+<g id="edge13" class="edge"><title>meuse.grid&#45;&gt;fcall_PkPW7P:center</title>
 <path fill="none" stroke="black" d="M805.467,-1478.75C814.118,-1454.08 826.746,-1418.07 836.273,-1390.9"/>
 <polygon fill="none" stroke="black" points="839.624,-1391.92 839.63,-1381.33 833.018,-1389.61 839.624,-1391.92"/>
 <text text-anchor="middle" x="840.508" y="-1425.8" font-family="Times,serif" font-size="14.00">obj</text>
@@ -180,8 +180,8 @@
 <path fill="none" stroke="red" d="M425.328,-1208.45C425.691,-1194.89 426.131,-1178.48 426.523,-1163.81"/>
 <polygon fill="red" stroke="red" points="430.03,-1163.59 426.8,-1153.5 423.033,-1163.4 430.03,-1163.59"/>
 </g>
-<!-- fcall_Y5n8hd&#45;&gt;meuse$lzinc -->
-<g id="edge16" class="edge"><title>fcall_Y5n8hd&#45;&gt;meuse$lzinc:center</title>
+<!-- fcall_ynFsGj&#45;&gt;meuse$lzinc -->
+<g id="edge16" class="edge"><title>fcall_ynFsGj&#45;&gt;meuse$lzinc:center</title>
 <path fill="none" stroke="red" d="M413.537,-1333.99C415.271,-1319.05 417.858,-1296.76 420.091,-1277.53"/>
 <polygon fill="red" stroke="red" points="423.577,-1277.85 421.253,-1267.52 416.623,-1277.05 423.577,-1277.85"/>
 </g>
@@ -191,37 +191,37 @@
 <text text-anchor="middle" x="430.563" y="-760.2" font-family="Times,serif" font-size="14.00">zincPointData </text>
 <text text-anchor="middle" x="430.563" y="-743.4" font-family="Times,serif" font-size="14.00">[S x Q x SExtend set]</text>
 </g>
-<!-- fcall_G1o1QO -->
-<g id="node17" class="node"><title>fcall_G1o1QO</title>
+<!-- fcall_AXPQNO -->
+<g id="node17" class="node"><title>fcall_AXPQNO</title>
 <ellipse fill="orange" stroke="black" cx="529.563" cy="-528" rx="171.009" ry="29.5"/>
 <text text-anchor="middle" x="529.563" y="-532.2" font-family="Times,serif" font-size="14.00">getInterpolator</text>
 <text text-anchor="middle" x="529.563" y="-515.4" font-family="Times,serif" font-size="14.00">[Q set &#45;&gt; S x Q x SExtend set &#45;&gt; SField]</text>
 </g>
-<!-- zincPointData&#45;&gt;fcall_G1o1QO -->
-<g id="edge18" class="edge"><title>zincPointData&#45;&gt;fcall_G1o1QO:center</title>
+<!-- zincPointData&#45;&gt;fcall_AXPQNO -->
+<g id="edge18" class="edge"><title>zincPointData&#45;&gt;fcall_AXPQNO:center</title>
 <path fill="none" stroke="black" d="M516.141,-742.073C558.096,-730.95 604.991,-710.299 630.563,-672 645.371,-649.823 641.956,-636.11 630.563,-612 621.23,-592.249 604.637,-575.618 587.564,-562.551"/>
 <polygon fill="none" stroke="black" points="589.314,-559.495 579.173,-556.425 585.186,-565.149 589.314,-559.495"/>
 <text text-anchor="middle" x="667.167" y="-637.8" font-family="Times,serif" font-size="14.00">pointData</text>
 </g>
-<!-- fcall_WamOuS -->
-<g id="node18" class="node"><title>fcall_WamOuS</title>
+<!-- fcall_i2idyG -->
+<g id="node18" class="node"><title>fcall_i2idyG</title>
 <ellipse fill="orange" stroke="black" cx="186.563" cy="-642" rx="131.25" ry="29.5"/>
 <text text-anchor="middle" x="186.563" y="-646.2" font-family="Times,serif" font-size="14.00">modelSemivariogram</text>
 <text text-anchor="middle" x="186.563" y="-629.4" font-family="Times,serif" font-size="14.00">[S x Q x SExtend set &#45;&gt; Q set]</text>
 </g>
-<!-- zincPointData&#45;&gt;fcall_WamOuS -->
-<g id="edge17" class="edge"><title>zincPointData&#45;&gt;fcall_WamOuS:center</title>
+<!-- zincPointData&#45;&gt;fcall_i2idyG -->
+<g id="edge17" class="edge"><title>zincPointData&#45;&gt;fcall_i2idyG:center</title>
 <path fill="none" stroke="black" d="M378.219,-730.973C341.272,-714.014 291.508,-691.172 251.949,-673.013"/>
 <polygon fill="none" stroke="black" points="253.192,-669.733 242.643,-668.742 250.271,-676.094 253.192,-669.733"/>
 <text text-anchor="middle" x="351.167" y="-694.8" font-family="Times,serif" font-size="14.00">pointData</text>
 </g>
-<!-- fcall_mRMEXD&#45;&gt;zincPointData -->
-<g id="edge19" class="edge"><title>fcall_mRMEXD&#45;&gt;zincPointData:center</title>
+<!-- fcall_sS1ZRm&#45;&gt;zincPointData -->
+<g id="edge19" class="edge"><title>fcall_sS1ZRm&#45;&gt;zincPointData:center</title>
 <path fill="none" stroke="red" d="M428.455,-824.457C428.736,-815.446 429.052,-805.334 429.352,-795.736"/>
 <polygon fill="red" stroke="red" points="432.855,-795.704 429.669,-785.599 425.858,-795.485 432.855,-795.704"/>
 </g>
-<!-- meuse[&quot;lzinc&quot;]&#45;&gt;fcall_mRMEXD -->
-<g id="edge20" class="edge"><title>meuse[&quot;lzinc&quot;]&#45;&gt;fcall_mRMEXD:center</title>
+<!-- meuse[&quot;lzinc&quot;]&#45;&gt;fcall_sS1ZRm -->
+<g id="edge20" class="edge"><title>meuse[&quot;lzinc&quot;]&#45;&gt;fcall_sS1ZRm:center</title>
 <path fill="none" stroke="black" d="M427.563,-938.448C427.563,-924.993 427.563,-908.729 427.563,-894.146"/>
 <polygon fill="none" stroke="black" points="431.063,-893.889 427.563,-883.889 424.063,-893.889 431.063,-893.889"/>
 <text text-anchor="middle" x="462.943" y="-906.8" font-family="Times,serif" font-size="14.00">observations</text>
@@ -232,24 +232,24 @@
 <text text-anchor="middle" x="529.563" y="-434.2" font-family="Times,serif" font-size="14.00">interpolator </text>
 <text text-anchor="middle" x="529.563" y="-417.4" font-family="Times,serif" font-size="14.00">[SField]</text>
 </g>
-<!-- fcall_TXxS8U -->
-<g id="node27" class="node"><title>fcall_TXxS8U</title>
+<!-- fcall_NV2Snr -->
+<g id="node27" class="node"><title>fcall_NV2Snr</title>
 <ellipse fill="orange" stroke="black" cx="716.563" cy="-316" rx="253" ry="29.5"/>
 <text text-anchor="middle" x="716.563" y="-320.2" font-family="Times,serif" font-size="14.00">interpolator</text>
 <text text-anchor="middle" x="716.563" y="-303.4" font-family="Times,serif" font-size="14.00">[S x SExtend set &#45;&gt; S x Q x SExtend set: INCONSISTENT!]</text>
 </g>
-<!-- interpolator&#45;&gt;fcall_TXxS8U -->
-<g id="edge21" class="edge"><title>interpolator&#45;&gt;fcall_TXxS8U:center</title>
+<!-- interpolator&#45;&gt;fcall_NV2Snr -->
+<g id="edge21" class="edge"><title>interpolator&#45;&gt;fcall_NV2Snr:center</title>
 <path fill="none" stroke="blue" d="M566.508,-406.872C593.44,-390.742 630.4,-368.606 660.898,-350.339"/>
 <polygon fill="blue" stroke="blue" points="662.945,-353.193 669.726,-345.052 659.348,-347.188 662.945,-353.193"/>
 </g>
-<!-- fcall_G1o1QO&#45;&gt;interpolator -->
-<g id="edge22" class="edge"><title>fcall_G1o1QO&#45;&gt;interpolator:center</title>
+<!-- fcall_AXPQNO&#45;&gt;interpolator -->
+<g id="edge22" class="edge"><title>fcall_AXPQNO&#45;&gt;interpolator:center</title>
 <path fill="none" stroke="red" d="M529.563,-498.457C529.563,-489.446 529.563,-479.334 529.563,-469.736"/>
 <polygon fill="red" stroke="red" points="533.063,-469.599 529.563,-459.599 526.063,-469.599 533.063,-469.599"/>
 </g>
-<!-- fcall_WamOuS&#45;&gt;fcall_G1o1QO -->
-<g id="edge23" class="edge"><title>fcall_WamOuS&#45;&gt;fcall_G1o1QO:center</title>
+<!-- fcall_i2idyG&#45;&gt;fcall_AXPQNO -->
+<g id="edge23" class="edge"><title>fcall_i2idyG&#45;&gt;fcall_AXPQNO:center</title>
 <path fill="none" stroke="black" d="M259.304,-617.248C312.749,-599.796 385.605,-576.007 442.205,-557.525"/>
 <polygon fill="none" stroke="black" points="443.439,-560.804 451.858,-554.373 441.266,-554.15 443.439,-560.804"/>
 <text text-anchor="middle" x="399.775" y="-580.8" font-family="Times,serif" font-size="14.00">params</text>
@@ -260,8 +260,8 @@
 <text text-anchor="middle" x="186.563" y="-760.2" font-family="Times,serif" font-size="14.00">init_model </text>
 <text text-anchor="middle" x="186.563" y="-743.4" font-family="Times,serif" font-size="14.00">[function]</text>
 </g>
-<!-- init_model&#45;&gt;fcall_WamOuS -->
-<g id="edge24" class="edge"><title>init_model&#45;&gt;fcall_WamOuS:center</title>
+<!-- init_model&#45;&gt;fcall_i2idyG -->
+<g id="edge24" class="edge"><title>init_model&#45;&gt;fcall_i2idyG:center</title>
 <path fill="none" stroke="blue" stroke-dasharray="5,2" d="M186.563,-726.448C186.563,-712.993 186.563,-696.729 186.563,-682.146"/>
 <polygon fill="blue" stroke="blue" points="190.063,-681.889 186.563,-671.889 183.063,-681.889 190.063,-681.889"/>
 </g>
@@ -271,8 +271,8 @@
 <text text-anchor="middle" x="529.563" y="-646.2" font-family="Times,serif" font-size="14.00">captureSemantics&lt;&#45; </text>
 <text text-anchor="middle" x="529.563" y="-629.4" font-family="Times,serif" font-size="14.00">[function]</text>
 </g>
-<!-- captureSemantics&lt;&#45;&#45;&gt;fcall_G1o1QO -->
-<g id="edge25" class="edge"><title>captureSemantics&lt;&#45;&#45;&gt;fcall_G1o1QO:center</title>
+<!-- captureSemantics&lt;&#45;&#45;&gt;fcall_AXPQNO -->
+<g id="edge25" class="edge"><title>captureSemantics&lt;&#45;&#45;&gt;fcall_AXPQNO:center</title>
 <path fill="none" stroke="blue" stroke-dasharray="5,2" d="M529.563,-612.448C529.563,-598.993 529.563,-582.729 529.563,-568.146"/>
 <polygon fill="blue" stroke="blue" points="533.063,-567.889 529.563,-557.889 526.063,-567.889 533.063,-567.889"/>
 </g>
@@ -282,42 +282,42 @@
 <text text-anchor="middle" x="836.563" y="-1050.2" font-family="Times,serif" font-size="14.00">locInterest </text>
 <text text-anchor="middle" x="836.563" y="-1033.4" font-family="Times,serif" font-size="14.00">[S x SExtend set]</text>
 </g>
-<!-- locInterest&#45;&gt;fcall_TXxS8U -->
-<g id="edge26" class="edge"><title>locInterest&#45;&gt;fcall_TXxS8U:center</title>
+<!-- locInterest&#45;&gt;fcall_NV2Snr -->
+<g id="edge26" class="edge"><title>locInterest&#45;&gt;fcall_NV2Snr:center</title>
 <path fill="none" stroke="black" d="M834.87,-1016.47C833.42,-989.549 831.563,-948.046 831.563,-912 831.563,-912 831.563,-912 831.563,-429 831.563,-396.057 807.044,-369.657 780.649,-350.781"/>
 <polygon fill="none" stroke="black" points="782.277,-347.655 772.042,-344.918 778.336,-353.441 782.277,-347.655"/>
 <text text-anchor="middle" x="868.487" y="-694.8" font-family="Times,serif" font-size="14.00">locOfInterest</text>
 </g>
-<!-- fcall_MnuOjc -->
-<g id="node22" class="node"><title>fcall_MnuOjc</title>
+<!-- fcall_QvtCYo -->
+<g id="node22" class="node"><title>fcall_QvtCYo</title>
 <ellipse fill="orange" stroke="black" cx="849.563" cy="-1238" rx="176.5" ry="29.5"/>
 <text text-anchor="middle" x="849.563" y="-1242.2" font-family="Times,serif" font-size="14.00">SFieldData</text>
 <text text-anchor="middle" x="849.563" y="-1225.4" font-family="Times,serif" font-size="14.00">[bool &#45;&gt; S set &#45;&gt; S set &#45;&gt; S x SExtend set]</text>
 </g>
-<!-- fcall_MnuOjc&#45;&gt;locInterest -->
-<g id="edge27" class="edge"><title>fcall_MnuOjc&#45;&gt;locInterest:center</title>
+<!-- fcall_QvtCYo&#45;&gt;locInterest -->
+<g id="edge27" class="edge"><title>fcall_QvtCYo&#45;&gt;locInterest:center</title>
 <path fill="none" stroke="red" d="M847.589,-1208.14C845.352,-1175.45 841.695,-1122.01 839.212,-1085.72"/>
 <polygon fill="red" stroke="red" points="842.688,-1085.24 838.513,-1075.51 835.704,-1085.72 842.688,-1085.24"/>
 </g>
-<!-- fcall_1peDew&#45;&gt;fcall_MnuOjc -->
-<g id="edge28" class="edge"><title>fcall_1peDew&#45;&gt;fcall_MnuOjc:center</title>
+<!-- fcall_JyowhW&#45;&gt;fcall_QvtCYo -->
+<g id="edge28" class="edge"><title>fcall_JyowhW&#45;&gt;fcall_QvtCYo:center</title>
 <path fill="none" stroke="black" d="M1067.82,-1328.87C1026.54,-1311.87 969.067,-1288.21 923.457,-1269.43"/>
 <polygon fill="none" stroke="black" points="924.788,-1266.19 914.209,-1265.62 922.123,-1272.66 924.788,-1266.19"/>
 <text text-anchor="middle" x="1036.94" y="-1290.8" font-family="Times,serif" font-size="14.00">observations</text>
 </g>
-<!-- fcall_keRiRN&#45;&gt;fcall_MnuOjc -->
-<g id="edge29" class="edge"><title>fcall_keRiRN&#45;&gt;fcall_MnuOjc:center</title>
+<!-- fcall_PkPW7P&#45;&gt;fcall_QvtCYo -->
+<g id="edge29" class="edge"><title>fcall_PkPW7P&#45;&gt;fcall_QvtCYo:center</title>
 <path fill="none" stroke="black" d="M849.563,-1322.45C849.563,-1308.99 849.563,-1292.73 849.563,-1278.15"/>
 <polygon fill="none" stroke="black" points="853.063,-1277.89 849.563,-1267.89 846.063,-1277.89 853.063,-1277.89"/>
 <text text-anchor="middle" x="870.561" y="-1290.8" font-family="Times,serif" font-size="14.00">domain</text>
 </g>
-<!-- lt_kBCGVQ -->
-<g id="node25" class="node"><title>lt_kBCGVQ</title>
+<!-- lt_AexSdU -->
+<g id="node25" class="node"><title>lt_AexSdU</title>
 <ellipse fill="white" stroke="black" cx="649.563" cy="-1352" rx="36.3712" ry="18"/>
 <text text-anchor="middle" x="649.563" y="-1347.8" font-family="Times,serif" font-size="14.00">TRUE</text>
 </g>
-<!-- lt_kBCGVQ&#45;&gt;fcall_MnuOjc -->
-<g id="edge30" class="edge"><title>lt_kBCGVQ&#45;&gt;fcall_MnuOjc:center</title>
+<!-- lt_AexSdU&#45;&gt;fcall_QvtCYo -->
+<g id="edge30" class="edge"><title>lt_AexSdU&#45;&gt;fcall_QvtCYo:center</title>
 <path fill="none" stroke="black" d="M672.288,-1337.95C695.323,-1324.75 732.018,-1303.82 763.918,-1286 772.469,-1281.22 781.521,-1276.21 790.412,-1271.31"/>
 <polygon fill="none" stroke="black" points="792.151,-1274.35 799.225,-1266.46 788.776,-1268.22 792.151,-1274.35"/>
 <text text-anchor="middle" x="804.386" y="-1290.8" font-family="Times,serif" font-size="14.00">cellsArePoints</text>
@@ -339,29 +339,29 @@
 <path fill="none" stroke="black" d="M716.563,-188.457C716.563,-179.446 716.563,-169.334 716.563,-159.736"/>
 <polygon fill="none" stroke="black" points="720.063,-159.599 716.563,-149.599 713.063,-159.599 720.063,-159.599"/>
 </g>
-<!-- fcall_TXxS8U&#45;&gt;intZincPointData -->
-<g id="edge32" class="edge"><title>fcall_TXxS8U&#45;&gt;intZincPointData:center</title>
+<!-- fcall_NV2Snr&#45;&gt;intZincPointData -->
+<g id="edge32" class="edge"><title>fcall_NV2Snr&#45;&gt;intZincPointData:center</title>
 <path fill="none" stroke="red" d="M716.563,-286.457C716.563,-277.446 716.563,-267.334 716.563,-257.736"/>
 <polygon fill="red" stroke="red" points="720.063,-257.599 716.563,-247.599 713.063,-257.599 720.063,-257.599"/>
 </g>
-<!-- lt_DN5kMS -->
-<g id="node28" class="node"><title>lt_DN5kMS</title>
+<!-- lt_2WJPJ5 -->
+<g id="node28" class="node"><title>lt_2WJPJ5</title>
 <ellipse fill="white" stroke="black" cx="716.563" cy="-430" rx="53.237" ry="18"/>
 <text text-anchor="middle" x="716.563" y="-425.8" font-family="Times,serif" font-size="14.00">S &#45;&gt; (S, Q)</text>
 </g>
-<!-- lt_DN5kMS&#45;&gt;fcall_TXxS8U -->
-<g id="edge33" class="edge"><title>lt_DN5kMS&#45;&gt;fcall_TXxS8U:center</title>
+<!-- lt_2WJPJ5&#45;&gt;fcall_NV2Snr -->
+<g id="edge33" class="edge"><title>lt_2WJPJ5&#45;&gt;fcall_NV2Snr:center</title>
 <path fill="none" stroke="black" d="M716.563,-411.99C716.563,-397.05 716.563,-374.762 716.563,-355.529"/>
 <polygon fill="none" stroke="black" points="720.063,-355.516 716.563,-345.516 713.063,-355.516 720.063,-355.516"/>
 <text text-anchor="middle" x="744.165" y="-368.8" font-family="Times,serif" font-size="14.00">semantics</text>
 </g>
-<!-- fcall_ZxBYCk -->
-<g id="node29" class="node"><title>fcall_ZxBYCk</title>
+<!-- fcall_DIwMAp -->
+<g id="node29" class="node"><title>fcall_DIwMAp</title>
 <ellipse fill="orange" stroke="black" cx="716.563" cy="-18" rx="34.4665" ry="18"/>
 <text text-anchor="middle" x="716.563" y="-13.8" font-family="Times,serif" font-size="14.00">spplot</text>
 </g>
-<!-- intZincPointData@observations[1]&#45;&gt;fcall_ZxBYCk -->
-<g id="edge34" class="edge"><title>intZincPointData@observations[1]&#45;&gt;fcall_ZxBYCk:center</title>
+<!-- intZincPointData@observations[1]&#45;&gt;fcall_DIwMAp -->
+<g id="edge34" class="edge"><title>intZincPointData@observations[1]&#45;&gt;fcall_DIwMAp:center</title>
 <path fill="none" stroke="black" d="M716.563,-90.344C716.563,-76.4998 716.563,-59.9679 716.563,-46.3055"/>
 <polygon fill="none" stroke="black" points="720.063,-46.0699 716.563,-36.0699 713.063,-46.0699 720.063,-46.0699"/>
 <text text-anchor="middle" x="725.508" y="-58.8" font-family="Times,serif" font-size="14.00">obj</text>

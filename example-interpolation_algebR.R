@@ -47,6 +47,7 @@ getInterpolator = function(params, pointData) {
     n = names(pointData@observations)[1] # which variable to model? take first.
     f = as.formula(paste(n, "~ 1")) 
     interpolate(f, pointData, locOfInterest, model = params)
+    
     # interpolate(f, pointData, locOfInterest, model = params, ndiscr=4, verbose=TRUE)
   }
   captureSemantics(out, semantics = "S -> (S, Q)") <-TRUE
@@ -69,8 +70,13 @@ algebr$enableProvenance()
 
 # load meuse data from package sp in current session:
 demo(meuse, ask=FALSE, echo=FALSE)
+algebr$disableProvenance()
+addSemanticPedigree(meuse,name = "SField", procedure = "S -> (S, Q)")
+algebr$enableProvenance()
 meuse$lzinc = log(meuse$zinc)
-
+algebr$disableProvenance()
+addSemanticPedigree(meuse,attr="lzinc", name = "log-function", procedure = "Q -> Q")
+algebr$enableProvenance()
 zincPointData = SFieldData(meuse["lzinc"], meuse.area)
 #class(zincPointData) # of class SField
 #plot(zincPointData)
