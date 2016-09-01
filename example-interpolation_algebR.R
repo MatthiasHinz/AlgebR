@@ -46,21 +46,37 @@ getInterpolator = function(params, pointData) {
   out=function(locOfInterest) {
     n = names(pointData@observations)[1] # which variable to model? take first.
     f = as.formula(paste(n, "~ 1")) 
-    interpolate(f, pointData, locOfInterest, model = params)
-    
+    out=interpolate(f, pointData, locOfInterest, model = params)
+    #out=addSemanticPedigree(var = out,name = "SField", procedure = "S -> (S,Q)",attr = n)
+    functionalType(out@observations) <- "SField"
+   # obsvns=sapply(out@observations, function(obsvn){
+  #    functionalType(out@observations) <- "SField"
+   #   return(obsvn)
+    #})
+    #out@observations <- obsvns
+    return(out)
     # interpolate(f, pointData, locOfInterest, model = params, ndiscr=4, verbose=TRUE)
   }
-  captureSemantics(out, semantics = "S -> (S, Q)") <-TRUE
-  attr(out, "semantics") <- "SField"
+  captureSemantics(out, semantics = "S -> (S, Q)", postprocessor=NULL) <-TRUE
+  attr(out, "semantics") <- "(S -> (S,Q))"
   # is, strictly not S -> Q but S -> (S,Q)
   return(out)
 }
-captureSemantics(getInterpolator) <-TRUE
+captureSemantics(getInterpolator, procedureName="getInterpolator") <-TRUE
 
-captureSemantics(geometry) <- TRUE
+captureSemantics(geometry, procedureName="geometry") <- TRUE
 
 SFieldData <- SField
-captureSemantics(SFieldData) <- TRUE
+
+captureSemantics(SFieldData,  procedureName = "SFieldData",
+  postprocessor = function(args, output, call_semantics) {
+    attr(output@observations, "semanticPedigree") <- getSemanticPedigree(args$observations)
+    attr(output@observations, "semantics") <- attr(args$observations,"semantics")
+   # print(paste0("assigned semantics: ", attr(output@observations, "semantics")))
+    return(output)
+  }
+) <- TRUE
+
 
 algebr$enableProvenance()
 
@@ -70,13 +86,14 @@ algebr$enableProvenance()
 
 # load meuse data from package sp in current session:
 demo(meuse, ask=FALSE, echo=FALSE)
-algebr$disableProvenance()
-addSemanticPedigree(meuse,name = "SField", procedure = "S -> (S, Q)")
-algebr$enableProvenance()
+functionalType(meuse) <- "SField"
+functionalType(meuse.grid) <- "SField"
 meuse$lzinc = log(meuse$zinc)
+
 algebr$disableProvenance()
-addSemanticPedigree(meuse,attr="lzinc", name = "log-function", procedure = "Q -> Q")
+meuse=addSemanticPedigree(meuse,attr="lzinc", name = "log-function", procedure = "Q -> Q")
 algebr$enableProvenance()
+
 zincPointData = SFieldData(meuse["lzinc"], meuse.area)
 #class(zincPointData) # of class SField
 #plot(zincPointData)
@@ -86,9 +103,9 @@ interpolator = getInterpolator(modelSemivariogram(zincPointData), zincPointData)
 #class(interpolator) # untyped, but is S -> Q
 
 locInterest = SFieldData(geometry(meuse.grid), geometry(meuse.grid), cellsArePoints = TRUE)
-intZincPointData = interpolator(locInterest, semantics = "S -> (S, Q)")
+intZincPointData = interpolator(locInterest, semantics = "S set -> S x Q set")
 #class(intZincPointData)
-spplot(intZincPointData@observations[1])
+spplot(intZincPointData@observations, "var1.pred")
 
 
 ## Create / visualize graph
@@ -103,5 +120,7 @@ system(command = "dot -Tpdf interpolation.dot -o interpolation.pdf")
 setwd("../")
 
 #for exploration and analytics, if the graph has an error...
-#algebr$compareVE(algebr$scriptGraph)
+algebr$compareVE(algebr$scriptGraph)
+#sapply(ls(), function(vars){getSemanticPedigree(get(vars, envir = globalenv()))})
 
+temp=algebr$estimateMissingSemantics(algebr$scriptGraph)

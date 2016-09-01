@@ -7,13 +7,14 @@ library(codetools)
 algebr = new.env()
 
 
+
 ####
 # Provenance functions
 ####
 
 #initiates a new graph opject for recording
 algebr$newDerivationGraph <-function(){
-  g = list(V = c(), E = list(), eAttrs=list(), nAttrs=list(), attrs=list(), fCalls=list())
+  g = list(V = c(), E = list(), eAttrs=list(), nAttrs=list(), attrs=list(), fCalls=list(), exps=list())
   g$attrs <- list(node=list(shape="ellipse", fixedsize=FALSE, fillcolor="white", style="filled"),
                   edge=list(style="solid", arrowhead="normal"))
   return(g)
@@ -41,7 +42,7 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
       return(TRUE)
     }
     algebr=data
-    algebr$rec_num = algebr$rec_num+1 #record number
+
     #------------------------------------------------------------------------------------
     # Collect provenance information from workspace changes that may be used for parsing
     #------------------------------------------------------------------------------------
@@ -63,7 +64,7 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
     
     algebr$tempCallStack = NULL
     if(dim(algebr$callStack)[1]>0){
-      algebr$tempCallStack <- subset(algebr$callStack, rec_num == algebr$rec_num-1) ##TODO: Review counting re_num (as mentioned above)
+      algebr$tempCallStack <- subset(algebr$callStack, rec_num == algebr$rec_num) ##TODO: Review counting re_num (as mentioned above)
      }
     
     #------------------------------------------------------------------------------------
@@ -83,12 +84,18 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
         
       )
     # warning(paste("These variables have been initialized from side-efects of the previous task: ", paste(side_effects, collapse = " ")))
-    }#look
+    }
+    
+    #estimates semantics of functions and expressions that are not explicitely stated
+   algebr$scriptGraph=algebr$estimateMissingSemantics(algebr$scriptGraph)
+    
+    #look
     #-----------------------------------------------------------------------------------
 
     # Be aware that the last_ls variable is overwritten IN THE END of the callback, but may be used during parsing from various methods
     # So please don't move it!
     algebr$last_ls = algebr$new_ls
+    algebr$rec_num = algebr$rec_num+1 #record number
     return(TRUE)
   }
 }
@@ -96,7 +103,7 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
 
 algebr$enableProvenance <- function(){
   if(is.null(algebr$rec_num))
-    algebr$rec_num = 0
+    algebr$rec_num = 1
   if(is.null(algebr$version_history))
     algebr$version_history = list()
   if(is.null(algebr$history_list))
@@ -105,8 +112,6 @@ algebr$enableProvenance <- function(){
     algebr$scriptGraph = algebr$newDerivationGraph()
   if(is.null(algebr$callStack))
     algebr$callStack = data.frame() 
-  if(is.null(algebr$semanticPedigree))
-    algebr$semanticPedigree = list()
   
   if(!isTRUE(algebr$isEnabled)){
     algebr$callback <- addTaskCallback(algebr$provenanceCallback())
@@ -147,12 +152,11 @@ algebr$reset <-function(){
   if(isTRUE(algebr$isEnabled)){
     algebr$disableProvenance()
   }
-  algebr$rec_num = 0
+  algebr$rec_num = 1
   algebr$version_history = list()
   algebr$history_list = list()
   algebr$scriptGraph = algebr$newDerivationGraph()
   algebr$callStack = data.frame()
-  algebr$semanticPedigree = list()
 }
 
 
@@ -167,6 +171,16 @@ algebr$history <- function(){
 # Functions for creating a derivation graphs
 ####
 
+algebr$addNodeLabel <- function(node_id, g, label){
+  g$nAttrs$label[[node_id]]=label
+  return(g)
+}
+
+
+algebr$getNodeLabel <- function(node_id, g){
+  g$nAttrs$label[[node_id]]
+}
+
 algebr$addNode = function(node_id, g, label=NULL, color=NULL, shape=NULL){
   node_id = algebr$unquote(as.character(as.expression(node_id)))
   if (all(g$V != node_id)){
@@ -175,7 +189,7 @@ algebr$addNode = function(node_id, g, label=NULL, color=NULL, shape=NULL){
   }
   
   if(!is.null(label))
-    g$nAttrs$label[[node_id]]=label
+      g=algebr$addNodeLabel(node_id, g, label)
   
   if(!is.null(color))
     g$nAttrs$fillcolor[[node_id]]="orange"
@@ -312,6 +326,22 @@ algebr$addEdgeOutput <- function(output, cmd, g, hidden=FALSE) {
     if(hidden)
       g$eAttrs$style[[paste0(cmd, "~", output)]] = "dashed"
   }
+  
+  if(cmd %in% names(g$fCalls)){
+    if(is.null(g$fCalls[[cmd]]$outputs)){
+      g$fCalls[[cmd]]$outputs = list(output)
+    }else{
+      g$fCalls[[cmd]]$outputs = append(g$fCalls[[cmd]]$outputs, output)
+    }
+  }
+  #sligthly redundand code...
+  if(cmd %in% names(g$exps)){
+    if(is.null(g$fexps[[cmd]]$outputs)){
+      g$exps[[cmd]]$outputs = list(output)
+    }else{
+      g$exps[[cmd]]$outputs = append(g$exps[[cmd]]$outputs, output)
+    }
+  }
   return(g)
 }
 
@@ -328,7 +358,26 @@ algebr$addEdgeInput <- function(input, cmd, g, label=NULL, hidden=FALSE){
       g$eAttrs$style[[paste0(input, "~", cmd)]] = "dashed"
   }else
     warning(paste("AlgebR: Dublicate edge from", input,"to",cmd,"! Second edge (and possibly the label) will not display in derivation graph."))
-    g$last_vt = input
+  
+  if(cmd %in% names(g$fCalls)){
+    if(is.null(g$fCalls[[cmd]]$inputs)){
+      g$fCalls[[cmd]]$inputs = list(input)
+    }else{
+      g$fCalls[[cmd]]$inputs = append(g$fCalls[[cmd]]$inputs, input)
+    }
+  }
+  #sligthly redundand code...
+ 
+  if(cmd %in% names(g$exps)){
+    if(is.null(g$fexps[[cmd]]$inputs)){
+      g$exps[[cmd]]$inputs = list(input)
+    }else{
+      g$exps[[cmd]]$inputs = append(g$exps[[cmd]]$inputs, input)
+    }
+  }
+  
+  
+  g$last_vt = input
   return(g)
 }
 
@@ -369,6 +418,12 @@ algebr$addNodeLiteral = function(label, g){
   
   return(g)
   #g$V = append(g$V, cmd_id)
+}
+
+algebr$addNodeExpression = function(label, g){
+  cmd_id=paste0("expr_",algebr$makeid())
+  g=algebr$addNode(node_id = cmd_id, label = label,g = g, color = "orange")
+  return(g)
 }
 
 algebr$addNodeOperation = function(label, g){
@@ -421,25 +476,32 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       #handle function definitions
     }else if(algebr$containsOnlyPrimitives(cmdInfo = cmdInfo)){
       #print(paste0("only primitives:", deparse(cmd)))
-      label=as.character(as.expression(cmd))
-      g=algebr$addNodeOperation(label = label,g = g)
+      exp=as.character(as.expression(cmd))
+
+      g=algebr$addNodeExpression(label = exp,g = g)
       cmd_id = g$last_vt
+      g$exps[[cmd_id]] = list(exp=exp, semantics=NA) #semantics must be estimated after evaluation of the whole task
+      
       outputs = append(cmdInfo@outputs, cmdInfo@updates)
       inputs = cmdInfo@inputs
       if(length(inputs)>0)
         sapply(inputs, function(input){
           #TODO: This solution needs to be reviewd (probably conflicting versioning)
           g <<- algebr$addNodeObject(input, g, isInput = TRUE)
-          IID = algebr$instance(input, forInput = TRUE)$IID
+          instance = algebr$instance(input, forInput = TRUE)
+          IID = instance$IID
           g <<- algebr$addEdgeInput(input = IID, cmd = cmd_id, g = g)
         })
       
       if(length(outputs)>0)
         sapply(outputs, function(output){
           g <<- algebr$addNodeObject(output, g, isOutput = TRUE)
-          IID = algebr$instance(output)$IID
+          instance = algebr$instance(output)
+          IID = instance$IID
           g <<- algebr$addEdgeOutput(output = IID, cmd = cmd_id, g = g)
         })
+      
+
       
     }else if(cmd[[1]] =='[[' || cmd[[1]]=='['|| cmd[[1]]=='$'|| cmd[[1]]=='@'){
       reference = cmd #TODO: add (this) object reference to profenance of this node
@@ -472,6 +534,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       }
       #-------------------
     }else if(any(cmd[[1]]==c("log","sin","cos"))&& (is.character(cmd[[2]]) || is.numeric(cmd[[2]]))){
+      ##this actually seems never to be aplied
       g = algebr$parseCommand(as.character(as.expression(cmd)));
       query=g$last_vt
       g$nAttrs$fillcolor[[query]]="orange"
@@ -500,6 +563,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
         label=algebr$unquote(as.character(as.expression(cmd[[1]])))
         call_function = label
         
+        semantics = NA
         #add semantics to label, if available
         if(captureSemantics(function_obj)){
           fid=attr(function_obj, "fid")
@@ -522,7 +586,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
           g$fCalls_count=1
         
         
-        g$fCalls[[cmd_id]]=list(fname=call_function, command=cmd, count=g$fCalls_count)  #called function (without any annotation)
+        g$fCalls[[cmd_id]]=list(fname=call_function, command=cmd, count=g$fCalls_count, semantics = semantics)  #called function (without any annotation)
         g$fCalls_count=g$fCalls_count+1
         if(captureSemantics(function_obj)){
           g$fCalls[[cmd_id]]=append(g$fCalls[[cmd_id]], list(wrapper_fid = attr(function_obj, "fid")))
@@ -577,9 +641,13 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
           globals = eval(call("findGlobals", function_obj, merge=FALSE))
           ##TODO: expore function references to other packages
           ls_func = globals$functions[globals$functions %in% ls(envir = globalenv())]
+          
+          hiddenCallBlackList <- c("captureSemantics<-","captureSemantics","functionalType<-","addSemanticPedigree")
           if(length(ls_func)>0)
             sapply(ls_func, function(x){
- 
+              if(x %in% hiddenCallBlackList) #ignore functions from the blacklist,i,e, tracker functions
+                return()
+              
               x<-algebr$unquote(x)
               g <<- algebr$addNodeObject(x,g = g,isInput = TRUE)
               x_IID = algebr$instance(as.character(x))$IID
@@ -669,12 +737,12 @@ algebr$rewriteReplacementFunction = function(expr){
 
 algebr$estimateSemantics <- function(var, env=globalenv()){
   
-  if(!is.character(var) && !is.symbol(var) && !is.name(var)) {
+  if((!is.character(var) && !is.symbol(var) && !is.name(var))) {
     obj=var
     var=as.character(substitute(var))
   }else{
     var=as.character(var)
-    obj = eval(parse(text=var),envir = env)
+    obj = tryCatch(eval(parse(text=var),envir = env),error = function(e) var)
   }
   if(!is.null(attr(obj, "semantics")))
     return(attr(obj, "semantics"))
@@ -699,14 +767,16 @@ algebr$estimateSemantics <- function(var, env=globalenv()){
   }
   
   if (is(obj, "SField")) { ## for the actual mss package
-    obs = slot(obj, "observations")
-    sObs = algebr$estimateSemantics(obs, env = environment())
+    SFieldData_observations = slot(obj, "observations")
+    sObs = algebr$estimateSemantics(SFieldData_observations, env = environment())
     sObs = str_replace(sObs, " set","")
     return(paste(sObs, "x SExtend set"))
   }
   
   if (is(obj, "SpatialLinesDataFrame")) {
-    return("S x Q set")
+    semantics= "(?)S x Q set"
+    warning(paste("No semantic annotation available for object",var,". Assumend semantics will be",semantics))
+    return(semantics)
   }
   
   if (is(obj, "SpatialLines")) {
@@ -715,11 +785,15 @@ algebr$estimateSemantics <- function(var, env=globalenv()){
   
   
   if (is(obj, "SpatialPixelsDataFrame")) {
-    return("S x Q set")
+    semantics= "(?)S x Q set"
+    warning(paste("No semantic annotation available for object",var,". Assumend semantics will be",semantics))
+    return(semantics)
   }
   
   if (is(obj, "SpatialPointsDataFrame")) {
-    return("S x Q set")
+    semantics= "(?)S x Q set"
+    warning(paste("No semantic annotation available for object",var,". Assumend semantics will be ",semantics))
+    return(semantics)
   }
   
   if (is(obj, "SpatialPixels")) {
@@ -733,7 +807,9 @@ algebr$estimateSemantics <- function(var, env=globalenv()){
   
   if (is(obj, "SpatialMultiPointsDataFrame")) {
     #how many points
-    return("S x Q set")
+    semantics= "(?)S x Q set"
+    warning(paste("No semantic annotation available for object",var,". Assumend semantics will be ",semantics))
+    return(semantics)
   }
   
   if (is(obj, "SpatialMultiPoints")) {
@@ -742,7 +818,9 @@ algebr$estimateSemantics <- function(var, env=globalenv()){
   }
   
   if (is(obj, "SpatialGridDataFrame")) {
-    return("R x Q set")
+    semantics = "(?)S x Q set"
+    warning(paste("No semantic annotation available for object",var,". Assumend semantics will be ",semantics))
+    return(semantics)
   }
   
   if (is(obj, "SpatialGrid")) {
@@ -751,7 +829,9 @@ algebr$estimateSemantics <- function(var, env=globalenv()){
   
   if (is(obj, "SpatialPolygonsDataFrame")) {
     #TODO: how many Polygons?
-    return("R x Q set")
+    semantics= "(?)R x Q set"
+    warning(paste("No semantic annotation available for object",var,". Assumend semantics will be",semantics))
+    return(semantics)
   }
   
   if (is(obj, "SpatialPolygons")) {
@@ -781,6 +861,14 @@ algebr$callSemantics = function(x){
   return(attr(x,"callSemantics"))
 }
 
+
+algebr$estimateCallSemantics <- function(args, output) {
+  s_output = algebr$estimateSemantics(output)
+  s_inputs = sapply(args, function(arg){algebr$estimateSemantics(arg, env = environment())})
+  call_semantics = paste(paste(s_inputs, collapse = " -> "), s_output, sep=" -> ")
+  return(call_semantics)
+}
+
 # setting call semantics is not yet supported, because the captureSemantics object cannot be accessed from the function body (I don't know how) 
 # setting semantics permanently has to be done by creating a new semantic wrapper
 #algebr$`callSemantics<-` = function(x, semantics){
@@ -790,12 +878,22 @@ algebr$callSemantics = function(x){
 #  return(attr(x,"callSemantics") <- semantics)
 #}
 
+#annotates a given variable with the callsemantics of procedure x, standard postprocessor for function wrappers
+algebr$genericProcedureAnnotator <- function(procedureName){
+  function(args, output, callSemantics){
+    output=addSemanticPedigree(var = output, name = procedureName, procedure = callSemantics)
+    return(output)
+  }
+}
+
 #jars of clay - frail
 captureSemantics <- function(fun){
   return(isTRUE(attr(fun,"SemanticWrapper")))
 }
 
-`captureSemantics<-` <- function(fun, value, semantics = NA){
+
+
+`captureSemantics<-` <- function(fun, value, semantics = NA, procedureName = "unknown", validator=NULL, postprocessor=algebr$genericProcedureAnnotator(procedureName)){
   if(is.null(semantics)){
     semantics=NA
   }
@@ -825,6 +923,8 @@ captureSemantics <- function(fun){
   
   wrapper=function(){
     #TODO: Improve wrapping behaviour, e.g. by capturing and passing the original variable names with non-standard evaluation
+   
+    
     ls_fun=ls(envir = environment())
     args = sapply(ls_fun, function(var){
       #print(var)
@@ -836,13 +936,24 @@ captureSemantics <- function(fun){
     if(!"semantics" %in% names(formals(wFun))){
       args=args[names(args)!="semantics"]
     }
-    
-    output = do.call(wFun, args, envir = environment())
-    
+    isConsistent = TRUE
 
-    s_output = algebr$estimateSemantics(output)
-    s_inputs = sapply(args, function(arg){algebr$estimateSemantics(arg, env = environment())})
-    call_semantics = paste(paste(s_inputs, collapse = " -> "), s_output, sep=" -> ")
+    output = do.call(wFun, args, envir = environment())
+
+    
+    call_semantics = algebr$estimateCallSemantics(args, output)
+
+    
+    if(!is.null(postprocessor)){
+      output = postprocessor(args, output, call_semantics)
+    }
+    if(!is.null(validator)){
+      isValid = validator(args, output, semantics, call_semantics)
+      if(!isValid){
+        warning("Semantic inconsistensy found during post-validation of a semanic wrapper!")
+        isConsistent=FALSE
+      }
+    }
     
     if(length(semantics==1) && is.na(semantics)){ ## estimate semantics from in/output
       semantics = call_semantics
@@ -851,8 +962,10 @@ captureSemantics <- function(fun){
       sc=str_to_upper(str_trim(call_semantics))
       if(!sc %in% s){
         warning(paste("Inconsistent function semantics, given is ",call_semantics,"but expected was one of the following: ",paste(semantics,collapse=", ")))
-        call_semantics = paste0(call_semantics, ": INCONSISTENT!")
+        isConsistent = FALSE
       }
+      if(!isConsistent)
+        call_semantics = paste0(call_semantics, ": INCONSISTENT!")
     }
     
     ## The call is only recordet if it occurs from the global environment (to avoid confusion if they are called internaly or recursively(?))
@@ -882,28 +995,98 @@ captureSemantics <- function(fun){
   return(fun)
 }
 
-addSemanticPedigree <- function(var, attr="ALL", name = NA, procedure){
-  varname = as.character(substitute(var))
-  if(is.null(algebr$semanticPedigree[[varname]]))
-    algebr$semanticPedigree[[varname]] = data.frame()
+addSemanticPedigree <- function(var, attr="ALL", name = NA, procedure, result_semantics=NULL, parent_semantics=NULL){
+  #varname = as.character(substitute(var))
+  if(is.null(attr(var, "semanticPedigree"))){
+    attr(var, "semanticPedigree") <- data.frame()
+  }
+  if(attr=="ALL" && is.null(parent_semantics)){
+    if(!is.null(result_semantics)){
+      attr(var, "semantics") <-result_semantics
+    }
+  }else{
+    if(!is.null(result_semantics) && attr!="ALL"){
+      attr(var[[attr]], "semantics") <-result_semantics
+    }
+    
+    if(!is.null(parent_semantics)){
+      attr(var, "semantics") <-parent_semantics
+    }
+  }
   
-  record = data.frame(attr=attr, name=name, procedure=procedure)
-  algebr$semanticPedigree[[varname]] = rbind(algebr$semanticPedigree[[varname]], record)
+  if(attr=="ALL" && is.null(parent_semantics)){
+    result_semantics = algebr$estimateSemantics(var)
+    parent_semantics = NA
+  }else if(attr=="ALL" && !is.null(result_semantics)){
+    parent_semantics =  algebr$estimateSemantics(var)
+  }else{
+    result_semantics = algebr$estimateSemantics(var[[attr]])
+    parent_semantics =  algebr$estimateSemantics(var)
+  }
+  
+  
+  command=NA
+  rec_num=NA
+  
+  if(algebr$isEnabled){
+    rec_num=algebr$rec_num
+    if(algebr$rec_num <= length(algebr$history()))
+      command=paste(deparse(expr=algebr$history()[[algebr$rec_num]]),collapse="\n")
+       #if the call is currently executed, the command is still unknown but can be interfered later from the record number
+  }
+  record = data.frame(procedureName=name,  procedure=procedure,  result_attribute=attr, result_semantics=result_semantics, parent_semantics = parent_semantics,  rec_num=rec_num, command=command)
+
+  
+  attr(var,"semanticPedigree") <- rbind(attr(var,"semanticPedigree"), record)
+  if(attr=="ALL" && !is.null(names(var))){
+    for(name in names(var)){
+     if(is.null(attr(var[[name]],"semanticPedigree"))){
+       attr(var[[name]],"semanticPedigree") <- data.frame()
+     }
+     attr(var[[name]],"semanticPedigree") <- rbind(attr(var[[name]],"semanticPedigree"), record)
+    }
+  }else if(attr!="ALL" && attr %in% names(var)){
+    if(is.null(attr(var[[attr]],"semanticPedigree"))){
+      attr(var[[attr]],"semanticPedigree") <- data.frame()
+    }
+    attr(var[[attr]],"semanticPedigree") <- rbind(attr(var[[attr]],"semanticPedigree"), record)
+  }
+  return(var)
+}
+
+algebr$findMissingPedigreeCommands <- function(ped){
+  for(i in dim(ped)[1]){
+    record = ped[1,]
+    if(is.na(record$command) && !is.na(record$rec_num)){
+      if(record$rec_num <= length(algebr$history())){
+          record$command=paste(deparse(expr=algebr$history()[[record$rec_num]]),collapse="\n")
+      }
+    }
+    ped[1,] = record
+  }
+  return(ped)
 }
 
 getSemanticPedigree <- function(var, attr="ALL"){
   varname = as.character(substitute(var))
-  if(is.null(algebr$semanticPedigree))
+  if(is.null(attr(var,"semanticPedigree")))
     return(NULL)
   
-  out = algebr$semanticPedigree[[varname]]
+  out=NULL
   if(attr=="ALL"){
-    return(out)
+    out = attr(var,"semanticPedigree")
+  }else if(attr %in% names(var)){
+    out = attr(var[[attr]],"semanticPedigree")
+  }else{
+    out = attr(var,"semanticPedigree")
+    sel1 = out$attr == "ALL"
+    sel2= out$att == attr
+    sel = sel1 | sel2 #select all records refering to either the specified attribute or "ALL" attributes
+    out = out[sel,]
   }
-  sel1 = out$attr == "ALL"
-  sel2= out$att == attr
-  sel = sel1 | sel2 #select all records refering to either the specified attribute or "ALL" attributes
-  out = out[sel,]
+  
+  if(!is.null(out))
+    out = algebr$findMissingPedigreeCommands(out)
   return(out)
 }
 
@@ -986,3 +1169,107 @@ algebr$removeTheAt = function(expr){
   return(outExp)
 }
 
+
+`functionalType<-` <- function(obj,attr="ALL",value){
+  if(value == "SField"){
+      obj=addSemanticPedigree(obj,attr = attr, name = "SField", procedure = "S -> Q",result_semantics = "Q set", parent_semantics = "S x Q set")
+      return(obj)
+  }
+  
+  if(value == "Field"){
+    obj=addSemanticPedigree(meuse,attr = attr, name = "Field", procedure = "S x T-> Q",result_semantics = "Q set", parent_semantics = "S x T x Q set")
+    return(obj)
+   }
+  stop("Functional type name is unknown. Please consider adding the semantics manually using addSemanticPedigree")
+}
+
+
+algebr$estimateMissingSemantics = function(g){
+  #estimate missing semantics of expressions
+  
+  #finds semantics of inputs/outputs (dependend nodes, "dep_nodes") for an expression
+  findDependencySemantics <- function(exp, dep_nodes, g) {
+    if(!is.null(dep_nodes)&& length(dep_nodes)>0){
+      sem_vec = sapply(dep_nodes, function(dep_id){
+        record=algebr$findInstanceRecord(dep_id)
+        if(!is.null(record)){
+          return(record$semantics) #should always return a value normally
+        } else if(dep_id %in% names(g$fCalls)){
+          return("?")
+        }else
+          return("?")
+      })
+      return(sem_vec)
+    }else{
+      tryCatch({value_xyz = eval(parse(text=exp$exp))
+      dep_sem=algebr$estimateSemantics(value_xyz)},
+      error= function(e){
+        warning(paste("semantics of expression ", exp, "could not be evaluated"))
+        in_sem="?"})
+      return(in_sem)
+    }
+  }
+  
+  
+  g$exps=mapply(function(exp, exp_id){
+    if(is.na(exp$semantics)){
+      in_vec = findDependencySemantics(exp, exp$inputs, g)
+      in_vec = paste(in_vec, collapse = " -> ")
+      out_sem = findDependencySemantics(exp, exp$outputs, g)
+      exp$semantics=paste0(in_vec, " -> ", out_sem)
+      label = g$nAttrs$label[[exp_id]]
+      label = paste0(label,"\n[",exp$semantics,"]")
+      g$nAttrs$label[[exp_id]] <<- label
+      out_iid = g$exps[[exp_id]]$outputs[[1]]
+      
+      #addSemanticPedigree() TODO: add semantic pedigree to the output(s)
+    }
+    
+    return(exp)
+  }, exp=g$exps, exp_id=names(g$exps),SIMPLIFY = FALSE)
+  
+  #estimate missing semantics of function calls
+  g$fCalls=sapply(g$fCalls, function(fCall){
+    if(is.na(fCall$semantics)){
+      
+      
+      #if(str_detect(node_id, "^lt_")){
+        # assume it is a literal, try to parse label to value #TODO make this more "formal" 
+    }
+    return(fCall)
+  }, simplify = FALSE)
+  
+  #print(g$exps)
+  #print(g$fCalls)
+  return(g)
+}
+
+#test=algebr$estimateMissingSemantics(algebr$scriptGraph)
+#test$exps$expr_lkjnmQ
+#test$fCalls$fcall_crrNKR
+algebr$varFromIID <-function(iid){
+  var=str_replace(iid, "~\\d*$","")
+  if(!is.null(algebr$versions(var)))
+    return(var)
+  else
+    return(NULL)
+}
+
+algebr$findInstanceRecord = function(node_id){
+   var=algebr$varFromIID(node_id)
+   if(is.null(var))
+     return(NULL)
+   hist = algebr$versions(var)
+   if(!is.null(hist)){
+     sel=which(hist$IID == node_id)
+    
+     if(length(sel)==1)
+       return(hist[sel,])
+     else {
+       #print("a!")
+       return(NULL)}
+   }else{
+     #print("o!")
+     return(NULL)
+   }
+}
