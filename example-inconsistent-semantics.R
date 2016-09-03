@@ -13,7 +13,7 @@ captureSemantics(log, semantics=c("Q -> Q", "Q set -> Q set")) <- TRUE
 algebr$enableProvenance()
 t=123
 log(t) #no inconsistencies
-log(t, c("Q set -> Q set"))
+log(t, "OtherType -> Q")
 attr(t, "semantics") <-"myType"
 log(t)
 algebr$disableProvenance()
@@ -23,3 +23,5 @@ setwd("output")
 toFile(gRlayout , layoutType="dot", filename="inconsistentGraph.dot", fileType="dot")
 system(command = "dot -Tpng inconsistentGraph.dot -o inconsistentGraph.png")
 setwd("..")
+
+plot(algebr$getScriptGraph())

@@ -1201,8 +1201,9 @@ algebr$estimateMissingSemantics = function(g){
       })
       return(sem_vec)
     }else{
+      #print(paste("No dep nodes for ", as.character(as.expression(substitute(dep_nodes)))))
       tryCatch({value_xyz = eval(parse(text=exp$exp))
-      dep_sem=algebr$estimateSemantics(value_xyz)},
+      in_sem=algebr$estimateSemantics(value_xyz)},
       error= function(e){
         warning(paste("semantics of expression ", exp, "could not be evaluated"))
         in_sem="?"})
