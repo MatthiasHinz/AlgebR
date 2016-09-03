@@ -90,10 +90,6 @@ functionalType(meuse) <- "SField"
 functionalType(meuse.grid) <- "SField"
 meuse$lzinc = log(meuse$zinc)
 
-algebr$disableProvenance()
-meuse=addSemanticPedigree(meuse,attr="lzinc", name = "log-function", procedure = "Q -> Q")
-algebr$enableProvenance()
-
 zincPointData = SFieldData(meuse["lzinc"], meuse.area)
 #class(zincPointData) # of class SField
 #plot(zincPointData)

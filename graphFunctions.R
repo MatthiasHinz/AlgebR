@@ -13,6 +13,12 @@ algebr = new.env()
 ####
 
 #initiates a new graph opject for recording
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$newDerivationGraph <-function(){
   g = list(V = c(), E = list(), eAttrs=list(), nAttrs=list(), attrs=list(), fCalls=list(), exps=list())
   g$attrs <- list(node=list(shape="ellipse", fixedsize=FALSE, fillcolor="white", style="filled"),
@@ -22,6 +28,14 @@ algebr$newDerivationGraph <-function(){
 
 # returns derivation graph of the script in Ragraph format (Rgraphviz)
 # can also convert other graphs created by algebr$newDerivationGraph to the Ragraph format (g-parameter)
+#' Title
+#'
+#' @param g 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$getScriptGraph <- function(g=algebr$scriptGraph){
   gR <- graphNEL(nodes = g$V,
                  edgeL = g$E,
@@ -32,6 +46,14 @@ algebr$getScriptGraph <- function(g=algebr$scriptGraph){
   gRlayout <- agopen(gR, name="f", attrs=g$attrs, nodeAttrs=g$nAttrs, edgeAttrs=g$eAttrs) 
 }
 
+#' Title
+#'
+#' @param algebr_env 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$provenanceCallback <- function(algebr_env = algebr) {
   #TODO: review the counting of rec_num, for capturing semantics and parsing in-outputs
   isFirstCall = TRUE 
@@ -101,6 +123,12 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
 }
 
 
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$enableProvenance <- function(){
   if(is.null(algebr$rec_num))
     algebr$rec_num = 1
@@ -136,6 +164,12 @@ algebr$enableProvenance <- function(){
 
 
 
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$disableProvenance <-function(){
   
   if(isTRUE(algebr$isEnabled)){
@@ -148,6 +182,12 @@ algebr$disableProvenance <-function(){
 }
 
 
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$reset <-function(){
   if(isTRUE(algebr$isEnabled)){
     algebr$disableProvenance()
@@ -161,6 +201,12 @@ algebr$reset <-function(){
 
 
 
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$history <- function(){
   return(algebr$history_list)
 }
@@ -171,16 +217,47 @@ algebr$history <- function(){
 # Functions for creating a derivation graphs
 ####
 
+#' Title
+#'
+#' @param node_id 
+#' @param g 
+#' @param label 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addNodeLabel <- function(node_id, g, label){
   g$nAttrs$label[[node_id]]=label
   return(g)
 }
 
 
+#' Title
+#'
+#' @param node_id 
+#' @param g 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$getNodeLabel <- function(node_id, g){
   g$nAttrs$label[[node_id]]
 }
 
+#' Title
+#'
+#' @param node_id 
+#' @param g 
+#' @param label 
+#' @param color 
+#' @param shape 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addNode = function(node_id, g, label=NULL, color=NULL, shape=NULL){
   node_id = algebr$unquote(as.character(as.expression(node_id)))
   if (all(g$V != node_id)){
@@ -199,6 +276,16 @@ algebr$addNode = function(node_id, g, label=NULL, color=NULL, shape=NULL){
 }
 
 #returns the last instance of the version history of a variable, i.e. the most recently collected metadata
+#' Title
+#'
+#' @param var 
+#' @param pos 
+#' @param forInput 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$instance <- function(var, pos=0, forInput=FALSE){
   if(!is.character(var))
     var=as.character(substitute(var))
@@ -217,6 +304,14 @@ algebr$instance <- function(var, pos=0, forInput=FALSE){
 
 
 
+#' Title
+#'
+#' @param var 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addNewVersionRecord <- function(var){
   #print(paste("new Version record",var))
   var=as.character(as.expression(var))
@@ -244,6 +339,14 @@ algebr$addNewVersionRecord <- function(var){
   algebr$version_history[[var]]=rbind(algebr$version_history[[var]], instance)
 }
 
+#' Title
+#'
+#' @param var 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$versions <- function(var){
   if(!is.character(var))
     var=as.character(substitute(var))
@@ -254,6 +357,18 @@ algebr$versions <- function(var){
   return(algebr$version_history[[var]])
 }
 
+#' Title
+#'
+#' @param var 
+#' @param g 
+#' @param isInput 
+#' @param isOutput 
+#' @param isSubset 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE, isSubset=FALSE) {
   
   var = algebr$unquote(as.character(as.expression(var)))#ensure that variable name is a string
@@ -318,6 +433,17 @@ algebr$addNodeObject <- function(var, g, isInput=FALSE, isOutput=FALSE, isSubset
 }
 
 
+#' Title
+#'
+#' @param output 
+#' @param cmd 
+#' @param g 
+#' @param hidden 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addEdgeOutput <- function(output, cmd, g, hidden=FALSE) {
   if(all(g$E[[cmd]]$edges != output)){
     g$E[[cmd]]$edges = append(g$E[[cmd]]$edges, output)
@@ -345,6 +471,18 @@ algebr$addEdgeOutput <- function(output, cmd, g, hidden=FALSE) {
   return(g)
 }
 
+#' Title
+#'
+#' @param input 
+#' @param cmd 
+#' @param g 
+#' @param label 
+#' @param hidden 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addEdgeInput <- function(input, cmd, g, label=NULL, hidden=FALSE){
   if(all(g$E[[input]]$edges != cmd)){
     g$E[[input]]$edges = append(g$E[[input]]$edges, cmd)
@@ -381,6 +519,18 @@ algebr$addEdgeInput <- function(input, cmd, g, label=NULL, hidden=FALSE){
   return(g)
 }
 
+#' Title
+#'
+#' @param parent 
+#' @param child 
+#' @param g 
+#' @param label 
+#' @param hidden 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addEdgeDerivation <- function(parent, child, g, label=NULL, hidden=FALSE){
   if(all(g$E[[parent]]$edges != child)){
     g$E[[parent]]$edges = append(g$E[[parent]]$edges, child)
@@ -398,6 +548,17 @@ algebr$addEdgeDerivation <- function(parent, child, g, label=NULL, hidden=FALSE)
   return(g)
 }
 
+#' Title
+#'
+#' @param fun_id 
+#' @param call_id 
+#' @param g 
+#' @param hidden 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addEdgeFunctionCall <- function(fun_id, call_id, g, hidden=FALSE){
   if(all(g$E[[fun_id]]$edges != call_id)){
     g$E[[fun_id]]$edges = append(g$E[[fun_id]]$edges, call_id)
@@ -411,6 +572,15 @@ algebr$addEdgeFunctionCall <- function(fun_id, call_id, g, hidden=FALSE){
 }
 
 
+#' Title
+#'
+#' @param label 
+#' @param g 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addNodeLiteral = function(label, g){
   vt_id=paste0("lt_",algebr$makeid()) #generates a random id for the node to be unique
   g=algebr$addNode(node = vt_id, g = g,label = label)
@@ -420,18 +590,48 @@ algebr$addNodeLiteral = function(label, g){
   #g$V = append(g$V, cmd_id)
 }
 
+#' Title
+#'
+#' @param label 
+#' @param g 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addNodeExpression = function(label, g){
   cmd_id=paste0("expr_",algebr$makeid())
   g=algebr$addNode(node_id = cmd_id, label = label,g = g, color = "orange")
   return(g)
 }
 
+#' Title
+#'
+#' @param label 
+#' @param g 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$addNodeOperation = function(label, g){
   cmd_id=paste0("fcall_",algebr$makeid())
   g=algebr$addNode(node_id = cmd_id, label = label,g = g, color = "orange")
   return(g)
 }
 
+#' Title
+#'
+#' @param cmd 
+#' @param g 
+#' @param first_call 
+#' @param isInput 
+#' @param isOutput 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eAttrs=list(), nAttrs=list(), chunks=list(), last_vt=NULL), first_call=FALSE, isInput=FALSE, isOutput=FALSE){
  # print(paste0("cmd:", deparse(cmd)))
   if(first_call)
@@ -474,7 +674,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
       g$V = append(g$V, cmd_id)
       g$E[[cmd_id]]=list(edges=c(), weights=c())
       #handle function definitions
-    }else if(algebr$containsOnlyPrimitives(cmdInfo = cmdInfo)){
+    }else if(algebr$containsOnlyPrimitives(cmd = cmdInfo)){
       #print(paste0("only primitives:", deparse(cmd)))
       exp=as.character(as.expression(cmd))
 
@@ -683,7 +883,20 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
   return(g)
 }
 
-algebr$containsOnlyPrimitives = function(cmdInfo){
+#' Title
+#'
+#' @param cmd 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+algebr$containsOnlyPrimitives = function(cmd){
+  if(class(cmd)== "ScriptNodeInfo")
+    cmdInfo=cmd
+  else
+    cmdInfo = getInputs(algebr$removeTheAt(cmd))
+    
   funs=names(cmdInfo@functions)
   sel = funs %in% c("[","[[","$","@") #exclude expressions that only contain subset-operators
   funs=funs[!sel]
@@ -695,14 +908,25 @@ algebr$containsOnlyPrimitives = function(cmdInfo){
   })
   return(all(isPrimitive))
 }
-# turns calls of replacement functions into a parser-friendly form
-#
-# For instance:
-# attr(t, "semantics") <- "test"
-# into
-# t <- `attr<-`(t, "semantics", "test")
+
+#' Title
+#'
+#'turns calls of replacement functions into a parser-friendly form
+#'
+#' For instance:
 #
 # See http://adv-r.had.co.nz/Functions.html
+#' @param expr 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' # attr(t, "semantics") <- "test"
+#'#returns t <- `attr<-`(t, "semantics", "test")
+#' 
+#' 
+#' 
 algebr$rewriteReplacementFunction = function(expr){
   if(is.call(expr[[2]])){
     fname= expr[[2]][[1]]
@@ -996,7 +1220,17 @@ captureSemantics <- function(fun){
 }
 
 addSemanticPedigree <- function(var, attr="ALL", name = NA, procedure, result_semantics=NULL, parent_semantics=NULL){
-  #varname = as.character(substitute(var))
+  #print(paste("adding semantics for", substitute(var), attr, name, procedure, result_semantics, parent_semantics))
+  ## attr might be of length > 1. in this case create one record for each attr
+  if(length(attr)>1){
+    for(attr_n in attr){
+      var <- addSemanticPedigree(var, attr_n, name, procedure, result_semantics, parent_semantics)
+    }
+    return(var)
+  }
+  
+  
+    #varname = as.character(substitute(var))
   if(is.null(attr(var, "semanticPedigree"))){
     attr(var, "semanticPedigree") <- data.frame()
   }
@@ -1024,7 +1258,6 @@ addSemanticPedigree <- function(var, attr="ALL", name = NA, procedure, result_se
     parent_semantics =  algebr$estimateSemantics(var)
   }
   
-  
   command=NA
   rec_num=NA
   
@@ -1034,23 +1267,22 @@ addSemanticPedigree <- function(var, attr="ALL", name = NA, procedure, result_se
       command=paste(deparse(expr=algebr$history()[[algebr$rec_num]]),collapse="\n")
        #if the call is currently executed, the command is still unknown but can be interfered later from the record number
   }
-  record = data.frame(procedureName=name,  procedure=procedure,  result_attribute=attr, result_semantics=result_semantics, parent_semantics = parent_semantics,  rec_num=rec_num, command=command)
+    record = data.frame(procedureName=name,  procedure=procedure,  result_attribute=attr, result_semantics=result_semantics, parent_semantics = parent_semantics,  rec_num=rec_num, command=command)
+    attr(var,"semanticPedigree") <- rbind(attr(var,"semanticPedigree"), record)
+    if(attr=="ALL" && !is.null(names(var))){
+      for(name in names(var)){
+       if(is.null(attr(var[[name]],"semanticPedigree"))){
+         attr(var[[name]],"semanticPedigree") <- data.frame()
+       }
+       attr(var[[name]],"semanticPedigree") <- rbind(attr(var[[name]],"semanticPedigree"), record)
+      }
+    }else if(attr!="ALL" && attr %in% names(var)){
+      if(is.null(attr(var[[attr]],"semanticPedigree"))){
+        attr(var[[attr]],"semanticPedigree") <- data.frame()
+      }
+      attr(var[[attr]],"semanticPedigree") <- rbind(attr(var[[attr]],"semanticPedigree"), record)
+    }
 
-  
-  attr(var,"semanticPedigree") <- rbind(attr(var,"semanticPedigree"), record)
-  if(attr=="ALL" && !is.null(names(var))){
-    for(name in names(var)){
-     if(is.null(attr(var[[name]],"semanticPedigree"))){
-       attr(var[[name]],"semanticPedigree") <- data.frame()
-     }
-     attr(var[[name]],"semanticPedigree") <- rbind(attr(var[[name]],"semanticPedigree"), record)
-    }
-  }else if(attr!="ALL" && attr %in% names(var)){
-    if(is.null(attr(var[[attr]],"semanticPedigree"))){
-      attr(var[[attr]],"semanticPedigree") <- data.frame()
-    }
-    attr(var[[attr]],"semanticPedigree") <- rbind(attr(var[[attr]],"semanticPedigree"), record)
-  }
   return(var)
 }
 
@@ -1222,7 +1454,37 @@ algebr$estimateMissingSemantics = function(g){
       label = paste0(label,"\n[",exp$semantics,"]")
       g$nAttrs$label[[exp_id]] <<- label
       out_iid = g$exps[[exp_id]]$outputs[[1]]
+      var = algebr$varFromIID(out_iid)
+      attr=algebr$findAttr(var)
       
+      tryCatch({
+        #look if call is function call
+        fname=parse(text=exp$exp)[[1]][[1]]
+        if(is.function(eval(fname, envir = globalenv()))){
+          name=paste0(deparse(fname),"-function")
+        }else 
+          name="expression"
+        
+      },error = function(e){ name="expression"
+      warning(e)
+      })
+      
+      if(is.na(attr)){
+        obj=eval(parse(text=var),envir = globalenv())
+
+        
+        obj=addSemanticPedigree(var = obj, name = name, procedure = exp$semantics, result_semantics = out_sem)
+        assign(var, obj, envir = globalenv())
+        #print(paste0("Assigninged semantic pedigree to ",var))
+      }else{
+        #find parent var
+        parent_var = parse(text = var)[[1]][[2]]
+        obj=eval(parent_var,envir = globalenv())
+        obj=addSemanticPedigree(var = obj, attr = attr ,name = name, procedure = exp$semantics, result_semantics = out_sem)
+        assign(deparse(parent_var), obj, envir = globalenv())
+        #print(paste0("Assigninged semantic pedigree to ",parent_var))
+      }
+
       #addSemanticPedigree() TODO: add semantic pedigree to the output(s)
     }
     
@@ -1267,10 +1529,84 @@ algebr$findInstanceRecord = function(node_id){
      if(length(sel)==1)
        return(hist[sel,])
      else {
-       #print("a!")
        return(NULL)}
    }else{
-     #print("o!")
      return(NULL)
    }
+}
+
+#for testing
+# exp=quote(meuse[[c(1,1)]]);exp
+# algebr$findAttr(exp)
+# exp=quote(meuse[[1]]);exp
+# algebr$findAttr(exp)
+# exp=quote(meuse["zinc"]);exp
+# algebr$findAttr(exp)
+# exp=quote(meuse[1,1]);exp
+# algebr$findAttr(exp)
+# exp=quote(meuse$zinc);exp
+# algebr$findAttr(exp)
+# exp=quote(meuse[c("zinc", "copper")]);exp
+# algebr$findAttr(exp)
+# exp=quote(meuse[c(1, 2)]);exp 
+# algebr$findAttr(exp)
+# exp=quote(intZincPointData@observations[1]);exp 
+# algebr$findAttr(exp)
+
+
+algebr$findAttr = function(exp){
+  if(is.character(exp))
+    exp=parse(text=exp)[[1]]
+  expl=as.list(exp);exp
+  if (length(expl) >= 3) {
+    #inputs may be e.g. meuse$zinc, meuse[["zinc"]], meuse[[1]], meuse[[c(1,1)]]
+    if (expl[[1]] == "[[") {
+      par = expl[[3]]
+      if (is.character(par)) {
+        attrN = par
+      } else if (is.numeric(par)) {
+        str = paste0("names(", deparse(expl[[2]]), "[", par, "])")
+        attrN = eval(parse(text = str), envir = globalenv())
+      } else if (algebr$containsOnlyPrimitives(par)) {
+        pval = eval(par, envir = globalenv())
+        pval
+        if (is.numeric(pval) && length(pval) > 0) {
+          str = paste0("names(", deparse(expl[[2]]), "[", pval[1], "])")
+          attrN = eval(parse(text = str), envir = globalenv())
+          
+        } else{
+          attrN = NA
+        }
+      } else{
+        attrN = NA
+      }
+    } else if (expl[[1]] == "$") {
+      if (is.name(expl[[3]])){
+        attrN = as.character(expl[[3]])
+      } else{
+        attrN = NA
+      }
+    } else if (expl[[1]] == "[") {
+      if(is.numeric(expl[[3]])){
+        str = paste0("names(", deparse(expl[[2]]), "[", expl[[3]], "])")
+        attrN = eval(parse(text = str), envir = globalenv())
+      }else if(is.character(expl[[3]])){
+        attrN = expl[[3]]
+      }else 
+        if(algebr$containsOnlyPrimitives(expl[[3]])){
+          pval = eval(expl[[3]], envir = globalenv())
+          if(is.character(pval)){
+            #character selector of multiple columns
+            attrN = pval
+          }else if(is.numeric(pval) || is.logical(pval)){
+            str = paste0("names(", deparse(expl[[2]]), "[", deparse(expl[[3]]), "])")
+            attrN = eval(parse(text = str), envir = globalenv())
+          }
+        }
+    } else{
+      attrN = NA
+    }
+    return(attrN)
+  }
+ return(NA)
 }
