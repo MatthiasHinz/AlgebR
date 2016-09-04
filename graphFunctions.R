@@ -1004,6 +1004,16 @@ algebr$estimateSemantics <- function(var, env=globalenv()){
     var=as.character(var)
     obj = tryCatch(eval(parse(text=var),envir = env),error = function(e) var)
   }
+  
+  ##for expressions such as meuse[1] (subset), it will be -ASSUMED- that the semantics are the same as with paren data set. i.e. meuse
+  var_e = parse(text=algebr$enquote(var))[[1]]
+  if(!is.symbol(var_e) && var_e[[1]]=="["){
+    var_e=var_e[[2]]
+    var=deparse(var_e)
+    obj = tryCatch(eval(var_e,envir = env),error = function(e) var)
+  }
+      
+    
   if(!is.null(attr(obj, "semantics")))
     return(attr(obj, "semantics"))
   # test if object is annotated with semantics, if not, predict semantics from class and structure (note that the latter is only a generic assumption, i.e. based on heuristics)
