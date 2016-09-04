@@ -793,8 +793,8 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
         # Normally the nodes and semantics should match well, but for the rare case that one function is executed multiple times in one task
         # Semantics missmatched if the stack is not processed in the right order.
         # Ideally, expressions should perhaps be parsed the same way as the parser works (leftmost-innermost ?) and the stack should be evaluated from the first to the last call
-        function_obj = algebr$funFromString(cmd[[1]])
-
+        #function_obj = algebr$funFromString(as.character(as.expression(cmd[[1]])))
+        function_obj = algebr$funFromString(as.character(cmd[[1]]))
         
         label=algebr$unquote(as.character(as.expression(cmd[[1]])))
         call_function = label
@@ -892,7 +892,7 @@ algebr$parseCommand = function(cmd, g=list(V = c(), E = list(), attrs=list(), eA
           ls_vars = globals$variables[globals$variables %in% ls(envir = globalenv())]
           if(length(ls_vars)>0)
             sapply(ls_vars, function(x){
-              if(x=="algebr") ##try not to track the tracker...
+              if(x %in% c("algebr")) ##try not to track the tracker...
                 return()
               g <<- algebr$addNodeObject(x,g = g,isInput = TRUE) #add node as input if not yet registered
               x_IID = algebr$instance(as.character(x))$IID
@@ -945,22 +945,22 @@ algebr$containsOnlyPrimitives = function(cmd){
   return(all(isPrimitive))
 }
 
-#' Title
+#' Rewrite replacement function
 #'
-#'turns calls of replacement functions into a parser-friendly form
+#' Turns calls of replacement functions into a logically equivalent, parser-friendly form
 #'
-#' For instance:
-#
-# See http://adv-r.had.co.nz/Functions.html
+#' See http://adv-r.had.co.nz/Functions.html
 #' @param expr 
 #'
 #' @return
 #' @export
-#'
-#' @examples
-#' # attr(t, "semantics") <- "test"
-#'#returns t <- `attr<-`(t, "semantics", "test")
 #' 
+#' @examples
+#' > algebr$rewriteReplacementFunction(quote(attr(t, "semantics") <- "test"))  
+#'  # t <- `attr<-`(t, "semantics", "test")
+#' 
+#' > algebr$rewriteReplacementFunction(quote(functionalType(meuse) <- "SField"))
+#'  #meuse <- `functionalType<-`(meuse, "SField")
 #' 
 #' 
 algebr$rewriteReplacementFunction = function(expr){
@@ -995,18 +995,20 @@ algebr$rewriteReplacementFunction = function(expr){
 # Semantics related functions
 ####
 
-algebr$estimateSemantics <- function(var, env=globalenv()){
+algebr$estimateSemantics <- function(var, env=globalenv(), isLiteral=FALSE){
   
-  if((!is.character(var) && !is.symbol(var) && !is.name(var))) {
+  if((!is.character(var) && !is.symbol(var) && !is.name(var)) || isLiteral) {
     obj=var
-    var=as.character(substitute(var))
+    var=as.character(as.expression(substitute(var)))
   }else{
     var=as.character(var)
     obj = tryCatch(eval(parse(text=var),envir = env),error = function(e) var)
   }
   
   ##for expressions such as meuse[1] (subset), it will be -ASSUMED- that the semantics are the same as with paren data set. i.e. meuse
-  var_e = parse(text=algebr$enquote(var))[[1]]
+# print(paste0("parse variable ", paste(var, collapse = ""), " of class ", class(var)))
+ var_e = parse(text=algebr$enquote(var))
+  var_e = var_e[[1]]
   if(!is.symbol(var_e) && var_e[[1]]=="["){
     var_e=var_e[[2]]
     var=deparse(var_e)
@@ -1151,7 +1153,7 @@ algebr$estimateCallSemantics <- function(args, output) {
 #annotates a given variable with the callsemantics of procedure x, standard postprocessor for function wrappers
 algebr$genericProcedureAnnotator <- function(procedureName){
   function(args, output, callSemantics){
-    output=addSemanticPedigree(var = output, name = procedureName, procedure = callSemantics)
+    output=addSemanticPedigree(obj = output, name = procedureName, procedure = callSemantics)
     return(output)
   }
 }
@@ -1187,7 +1189,7 @@ captureSemantics <- function(fun){
   if(isTRUE(attr(fun,"SemanticWrapper"))){
     fun = attr(fun,"wFun")
     fun = `captureSemantics<-`(fun, value = value, semantics = semantics)
-    warning("Function was already wrapped. It the old wrapper was replaced.")
+    warning("Function was already wrapped. The old wrapper is replaced.")
     return(fun)
   }
   
@@ -1244,6 +1246,14 @@ captureSemantics <- function(fun){
       callSemantics=data.frame(rec_num=algebr$rec_num, semantics=call_semantics,fid=fid, time = timestamp(quiet = TRUE), stringsAsFactors = FALSE)
       algebr$callStack=rbind(algebr$callStack,callSemantics)
     }
+    ## check if output was annotated
+    rec_nums = attr(output, "semanticPedigree")$rec_num
+    if(isTRUE(algebr$isEnabled) && (is.null(rec_nums) || !algebr$rec_num %in% rec_nums)){
+      genericProcessor = algebr$genericProcedureAnnotator(procedureName)
+      output=genericProcessor(args, output, call_semantics)
+      cat("Information: using 'genericProcedureAnnotator'-function to annotate output. Consider customizing the postprocessor-function in order to apply user-defined semantics.")
+      #warning("Function output was not annotated with pedigree. Please consider using 'genericProcedureAnnotator'-function or write a costum postprocessor function that annotates the output object!")
+    }
     
     return(output)
   }
@@ -1265,43 +1275,44 @@ captureSemantics <- function(fun){
   return(fun)
 }
 
-addSemanticPedigree <- function(var, attr="ALL", name = NA, procedure, result_semantics=NULL, parent_semantics=NULL){
-  #print(paste("adding semantics for", substitute(var), attr, name, procedure, result_semantics, parent_semantics))
+addSemanticPedigree <- function(obj, attr="ALL", name = NA, procedure, result_semantics=NULL, parent_semantics=NULL){
+  #print(paste("adding semantics for", substitute(obj), attr, name, procedure, result_semantics, parent_semantics))
   ## attr might be of length > 1. in this case create one record for each attr
   if(length(attr)>1){
     for(attr_n in attr){
-      var <- addSemanticPedigree(var, attr_n, name, procedure, result_semantics, parent_semantics)
+      obj <- addSemanticPedigree(obj, attr_n, name, procedure, result_semantics, parent_semantics)
     }
-    return(var)
+    return(obj)
   }
   
   
-    #varname = as.character(substitute(var))
-  if(is.null(attr(var, "semanticPedigree"))){
-    attr(var, "semanticPedigree") <- data.frame()
+    varname = as.character(substitute(obj))
+  if(is.null(attr(obj, "semanticPedigree"))){
+    attr(obj, "semanticPedigree") <- data.frame()
   }
   if(attr=="ALL" && is.null(parent_semantics)){
     if(!is.null(result_semantics)){
-      attr(var, "semantics") <-result_semantics
+      attr(obj, "semantics") <-result_semantics
     }
   }else{
     if(!is.null(result_semantics) && attr!="ALL"){
-      attr(var[[attr]], "semantics") <-result_semantics
+      attr(obj[[attr]], "semantics") <-result_semantics
     }
     
     if(!is.null(parent_semantics)){
-      attr(var, "semantics") <-parent_semantics
+      attr(obj, "semantics") <-parent_semantics
     }
   }
   
   if(attr=="ALL" && is.null(parent_semantics)){
-    result_semantics = algebr$estimateSemantics(var)
+    result_semantics = algebr$estimateSemantics(obj)
     parent_semantics = NA
   }else if(attr=="ALL" && !is.null(result_semantics)){
-    parent_semantics =  algebr$estimateSemantics(var)
+    parent_semantics =  algebr$estimateSemantics(obj)
   }else{
-    result_semantics = algebr$estimateSemantics(var[[attr]])
-    parent_semantics =  algebr$estimateSemantics(var)
+    #print(paste("estimating semantics of ---",varname, attr))
+    result_semantics = algebr$estimateSemantics(obj[[attr]])
+    parent_semantics =  algebr$estimateSemantics(obj)
   }
   
   command=NA
@@ -1313,50 +1324,68 @@ addSemanticPedigree <- function(var, attr="ALL", name = NA, procedure, result_se
       command=paste(deparse(expr=algebr$history()[[algebr$rec_num]]),collapse="\n")
        #if the call is currently executed, the command is still unknown but can be interfered later from the record number
   }
-    record = data.frame(procedureName=name,  procedure=procedure,  result_attribute=attr, result_semantics=result_semantics, parent_semantics = parent_semantics,  rec_num=rec_num, command=command)
-    attr(var,"semanticPedigree") <- rbind(attr(var,"semanticPedigree"), record)
-    if(attr=="ALL" && !is.null(names(var))){
-      for(name in names(var)){
-       if(is.null(attr(var[[name]],"semanticPedigree"))){
-         attr(var[[name]],"semanticPedigree") <- data.frame()
-       }
-       attr(var[[name]],"semanticPedigree") <- rbind(attr(var[[name]],"semanticPedigree"), record)
+    record = data.frame(procedureName=name,  procedure=procedure,  result_attribute=attr, result_semantics=result_semantics, parent_semantics = parent_semantics,  rec_num=rec_num, command=command, stringsAsFactors = FALSE)
+    attr(obj,"semanticPedigree") <- rbind(attr(obj,"semanticPedigree"), record)
+    if(attr=="ALL" && !is.null(names(obj))){
+      for(name in names(obj)){
+        try({
+            # in some cases, the "names" don't refer to attributes but to ids or something else
+            # so they are not always reliable for accessing atrributes
+           if(is.null(attr(obj[[name]],"semanticPedigree"))){
+             attr(obj[[name]],"semanticPedigree") <- data.frame()
+           }
+           attr(obj[[name]],"semanticPedigree") <- rbind(attr(obj[[name]],"semanticPedigree"), record)
+        }, silent= TRUE)
+        }
+    }else if(attr!="ALL" && attr %in% names(obj)){
+      if(is.null(attr(obj[[attr]],"semanticPedigree"))){
+        attr(obj[[attr]],"semanticPedigree") <- data.frame()
       }
-    }else if(attr!="ALL" && attr %in% names(var)){
-      if(is.null(attr(var[[attr]],"semanticPedigree"))){
-        attr(var[[attr]],"semanticPedigree") <- data.frame()
-      }
-      attr(var[[attr]],"semanticPedigree") <- rbind(attr(var[[attr]],"semanticPedigree"), record)
+      attr(obj[[attr]],"semanticPedigree") <- rbind(attr(obj[[attr]],"semanticPedigree"), record)
     }
 
-  return(var)
+  return(obj)
 }
 
 algebr$findMissingPedigreeCommands <- function(ped){
-  for(i in dim(ped)[1]){
-    record = ped[1,]
+  for(i in 1:dim(ped)[1]){
+    record = ped[i,]
     if(is.na(record$command) && !is.na(record$rec_num)){
       if(record$rec_num <= length(algebr$history())){
           record$command=paste(deparse(expr=algebr$history()[[record$rec_num]]),collapse="\n")
       }
     }
-    ped[1,] = record
+    ped[i,] = record
   }
   return(ped)
 }
 
-getSemanticPedigree <- function(var, attr="ALL"){
-  varname = as.character(substitute(var))
-  if(is.null(attr(var,"semanticPedigree")))
+getSemanticPedigree <- function(obj, attr="ALL"){
+  varname = as.character(substitute(obj))
+  
+  sn = slotNames(obj)
+  if(!is.null(sn)){
+    hasPedigree = sapply(sn, function(slotName){
+      pedigree=attr(slot(obj, slotName),"semanticPedigree")
+      return(!is.null(pedigree))
+    } ,USE.NAMES = FALSE)
+    
+    if(any(hasPedigree)){
+      message=paste("Information: Semantic pedigree is available for the following slot(s):", paste(sn[hasPedigree], collapse = ", "),"\n")
+      cat(message)
+    }
+  }
+  
+  if(is.null(attr(obj,"semanticPedigree")))
     return(NULL)
   
   out=NULL
   if(attr=="ALL"){
-    out = attr(var,"semanticPedigree")
-  }else if(attr %in% names(var)){
-    out = attr(var[[attr]],"semanticPedigree")
+    out = attr(obj,"semanticPedigree")
+  }else if(attr %in% names(obj)){
+    out = attr(obj[[attr]],"semanticPedigree")
   }else{
-    out = attr(var,"semanticPedigree")
+    out = attr(obj,"semanticPedigree")
     sel1 = out$attr == "ALL"
     sel2= out$att == attr
     sel = sel1 | sel2 #select all records refering to either the specified attribute or "ALL" attributes
@@ -1365,6 +1394,9 @@ getSemanticPedigree <- function(var, attr="ALL"){
   
   if(!is.null(out))
     out = algebr$findMissingPedigreeCommands(out)
+  
+ 
+  
   return(out)
 }
 
@@ -1465,10 +1497,120 @@ algebr$removeTheAt = function(expr){
   }
   
   if(value == "Field"){
-    obj=addSemanticPedigree(meuse,attr = attr, name = "Field", procedure = "S x T-> Q",result_semantics = "Q set", parent_semantics = "S x T x Q set")
+    obj=addSemanticPedigree(obj,attr = attr, name = "Field", procedure = "S x T-> Q",result_semantics = "Q set", parent_semantics = "S x T x Q set")
     return(obj)
    }
   stop("Functional type name is unknown. Please consider adding the semantics manually using addSemanticPedigree")
+}
+
+#captureSemantics(`functionalType<-`, postprocessor=NULL) <- TRUE
+
+algebr$isAlreadyAnnotated = function(obj){
+  #return(FALSE)
+  #look if object is already annoted
+  rec_nums = attr(obj, "semanticPedigree")$rec_num
+  isAnnotated= isTRUE(algebr$isEnabled) && !is.null(rec_nums) && algebr$rec_num %in% rec_nums
+ return(isAnnotated)
+}
+
+algebr$findExpressionSemantics = function(exp, exp_id, cmd, g){
+
+    in_vec = algebr$findDependencySemantics(exp, exp$inputs, cmd, g)
+    in_vec = paste(in_vec, collapse = " -> ")
+    out_sem = algebr$findDependencySemantics(exp, exp$outputs, cmd, g)
+    out_sem_str = out_sem
+    if(length(out_sem>1)){
+      out_sem_str = paste("(",paste(out_sem, collapse = ", "),")")
+    }
+    exp$semantics=paste0(in_vec, " -> ", out_sem_str)
+    label = g$nAttrs$label[[exp_id]]
+    label = paste0(label,"\n[",exp$semantics,"]")
+    g$nAttrs$label[[exp_id]] <- label
+  
+   out_iids = NULL
+  if(str_detect(exp_id,"^expr_")){
+    g$exps[[exp_id]] <- exp
+    out_iids = unlist(g$exps[[exp_id]]$outputs)
+  }else if(str_detect(exp_id,"^fcall_")){
+    g$fCalls[[exp_id]] <- exp
+    out_iids = unlist(g$fCalls[[exp_id]]$outputs)
+  }else{
+    stop(paste0("Could not determine whether input is a simple expression or a function call: ", exp_id))
+  }
+  
+  print(out_sem)
+  print(out_iids)
+  if(is.null(out_iids))
+    return(g)
+  mapply(function(out_iid, out_sem){
+    
+      var = algebr$varFromIID(out_iid)
+      
+
+      
+      attr=algebr$findAttr(var)
+      
+      tryCatch({
+        #look if call is function call
+        fname = cmd[[1]]
+        if (is.function(eval(fname, envir = globalenv()))) {
+          name = deparse(fname)
+        } else
+          name = "expression"
+        
+      }, error = function(e) {
+        name = "expression"
+        warning(e)
+      })
+      
+      if (is.na(attr)) {
+        obj = eval(parse(text = algebr$enquote(var)), envir = globalenv())
+        if(algebr$isAlreadyAnnotated(obj))
+          return(g)
+        obj = addSemanticPedigree(obj = obj, name = name, procedure = exp$semantics, result_semantics = out_sem)
+        assign(var, obj, envir = globalenv())
+        #print(paste0("Assigninged semantic pedigree to ",var))
+      } else{
+        #find parent var
+        parent_var = parse(text = algebr$enquote(var))[[1]][[2]]
+        obj = eval(parent_var, envir = globalenv())
+        if(algebr$isAlreadyAnnotated(obj))
+          return(g)
+        obj = addSemanticPedigree(obj = obj, attr = attr, name = name, procedure = exp$semantics, result_semantics = out_sem)
+        assign(deparse(parent_var), obj, envir = globalenv())
+        #print(paste0("Assigninged semantic pedigree to ",parent_var))
+      }
+  }, out_iid=out_iids, out_sem=out_sem)
+  return(g)
+  
+}
+
+
+algebr$findDependencySemantics <- function(exp, dep_nodes, cmd, g) {
+  if(!is.null(dep_nodes)&& length(dep_nodes)>0){
+    sem_vec = sapply(dep_nodes, function(dep_id){
+      record=algebr$findInstanceRecord(dep_id)
+      if(!is.null(record)){
+        return(record$semantics) #should always return a value normally
+      } else if(dep_id %in% names(g$fCalls)){
+        return("?")
+      }else if(str_detect(dep_id,"^lt_")){
+        value=g$nAttrs$label[[dep_id]] ##may not be the most stable solution... TODO: save literal values somewhere else
+        return(algebr$estimateSemantics(value,isLiteral = TRUE))
+      }else{
+        return("?")
+      }
+    })
+    return(sem_vec)
+  }else{
+    #print(paste("No dep nodes for ", as.character(as.expression(substitute(dep_nodes)))))
+    tryCatch({value_xyz = eval(cmd)
+    in_sem=algebr$estimateSemantics(value_xyz)},
+    error= function(e){
+      warning(paste("semantics of expression ", exp, "could not be evaluated"))
+      in_sem="?"})
+    return(in_sem)
+  }
 }
 
 
@@ -1476,87 +1618,27 @@ algebr$estimateMissingSemantics = function(g){
   #estimate missing semantics of expressions
   
   #finds semantics of inputs/outputs (dependend nodes, "dep_nodes") for an expression
-  findDependencySemantics <- function(exp, dep_nodes, g) {
-    if(!is.null(dep_nodes)&& length(dep_nodes)>0){
-      sem_vec = sapply(dep_nodes, function(dep_id){
-        record=algebr$findInstanceRecord(dep_id)
-        if(!is.null(record)){
-          return(record$semantics) #should always return a value normally
-        } else if(dep_id %in% names(g$fCalls)){
-          return("?")
-        }else
-          return("?")
-      })
-      return(sem_vec)
-    }else{
-      #print(paste("No dep nodes for ", as.character(as.expression(substitute(dep_nodes)))))
-      tryCatch({value_xyz = eval(parse(text=exp$exp))
-      in_sem=algebr$estimateSemantics(value_xyz)},
-      error= function(e){
-        warning(paste("semantics of expression ", exp, "could not be evaluated"))
-        in_sem="?"})
-      return(in_sem)
-    }
-  }
   
-  
-  g$exps=mapply(function(exp, exp_id){
+ mapply(function(exp, exp_id){
     if(is.na(exp$semantics)){
-      in_vec = findDependencySemantics(exp, exp$inputs, g)
-      in_vec = paste(in_vec, collapse = " -> ")
-      out_sem = findDependencySemantics(exp, exp$outputs, g)
-      exp$semantics=paste0(in_vec, " -> ", out_sem)
-      label = g$nAttrs$label[[exp_id]]
-      label = paste0(label,"\n[",exp$semantics,"]")
-      g$nAttrs$label[[exp_id]] <<- label
-      out_iid = g$exps[[exp_id]]$outputs[[1]]
-      var = algebr$varFromIID(out_iid)
-      attr=algebr$findAttr(var)
-      
-      tryCatch({
-        #look if call is function call
-        fname=parse(text=exp$exp)[[1]][[1]]
-        if(is.function(eval(fname, envir = globalenv()))){
-          name=paste0(deparse(fname),"-function")
-        }else 
-          name="expression"
-        
-      },error = function(e){ name="expression"
-      warning(e)
-      })
-      
-      if(is.na(attr)){
-        obj=eval(parse(text=algebr$enquote(var)),envir = globalenv())
-
-        
-        obj=addSemanticPedigree(var = obj, name = name, procedure = exp$semantics, result_semantics = out_sem)
-        assign(var, obj, envir = globalenv())
-        #print(paste0("Assigninged semantic pedigree to ",var))
-      }else{
-        #find parent var
-        parent_var = parse(text = algebr$enquote(var))[[1]][[2]]
-        obj=eval(parent_var,envir = globalenv())
-        obj=addSemanticPedigree(var = obj, attr = attr ,name = name, procedure = exp$semantics, result_semantics = out_sem)
-        assign(deparse(parent_var), obj, envir = globalenv())
-        #print(paste0("Assigninged semantic pedigree to ",parent_var))
-      }
-
-      #addSemanticPedigree() TODO: add semantic pedigree to the output(s)
+     cmd=parse(text=exp$exp)[[1]]
+     g <<- algebr$findExpressionSemantics(exp, exp_id, cmd,g =  g)
+     return()
     }
-    
-    return(exp)
-  }, exp=g$exps, exp_id=names(g$exps),SIMPLIFY = FALSE)
+     return()
+  }, exp=g$exps, exp_id=names(g$exps))
   
   #estimate missing semantics of function calls
-  g$fCalls=sapply(g$fCalls, function(fCall){
+mapply(function(fCall, call_id){
     if(is.na(fCall$semantics)){
       
-      
+      g <<- algebr$findExpressionSemantics(fCall, call_id, fCall$command,g= g)
       #if(str_detect(node_id, "^lt_")){
         # assume it is a literal, try to parse label to value #TODO make this more "formal" 
+      return()
     }
-    return(fCall)
-  }, simplify = FALSE)
+    return()
+  }, fCall=g$fCalls, call_id=names(g$fCalls))
   
   #print(g$exps)
   #print(g$fCalls)

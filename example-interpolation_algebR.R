@@ -7,7 +7,7 @@ library(gstat)
 library(mss)
 
 #----------------------------------------------------
-if(FALSE){
+if(TRUE){
   rm(list=ls()) #make sure to start from a clean workspace
 }
 source("graphFunctions.R")
@@ -58,7 +58,7 @@ getInterpolator = function(params, pointData) {
     return(out)
     # interpolate(f, pointData, locOfInterest, model = params, ndiscr=4, verbose=TRUE)
   }
-  captureSemantics(out, semantics = "S -> (S, Q)", postprocessor=NULL) <-TRUE
+  captureSemantics(out, semantics = "S -> (S, Q)") <-TRUE
   attr(out, "semantics") <- "(S -> (S,Q))"
   # is, strictly not S -> Q but S -> (S,Q)
   return(out)
@@ -105,7 +105,7 @@ interpolator = getInterpolator(modelSemivariogram(zincPointData), zincPointData)
 locInterest = SFieldData(geometry(meuse.grid), geometry(meuse.grid), cellsArePoints = TRUE)
 intZincPointData = interpolator(locInterest, semantics = "S set -> S x Q set")
 #class(intZincPointData)
-spplot(intZincPointData@observations, "var1.pred")
+spplot(intZincPointData@observations["var1.pred"])
 
 
 ## Create / visualize graph

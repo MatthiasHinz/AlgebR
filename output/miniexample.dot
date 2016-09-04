@@ -1,33 +1,37 @@
 digraph f {
-	graph [bgcolor=transparent, fontcolor=black, ratio=fill, splines=TRUE, rank=same, size="5.83333333333333,5.52083333333333", rankdir=TB];
+	graph [bgcolor=transparent, fontcolor=black, ratio=fill, splines=TRUE, rank=same, size="5.51041666666667,5.14583333333333", rankdir=TB];
 	node [label="\N", shape=ellipse, fixedsize=FALSE, fillcolor=white, style=filled, color=black, fontcolor=black, fontsize=14, height="0.5", width="0.75"];
 	edge [headport=center, style=solid, arrowhead=normal, color=black, dir=none, weight="1.0", fontcolor=black, arrowtail=none, fontsize=14, labelfontsize=11, arrowsize=1, minlen=1];
-	graph [bb="0,0,1231.4,1164"];
-	t [label="t \n[Q]", height="0.8171", pos="719.64,1060"];
-	lt_1ZXul6 [label=1, pos="719.64,1146"];
-	"t~2" [label="t~2 \n[test]", height="0.8171", width="0.87016", pos="719.64,888"];
-	fcall_od5Qph [label="`attr<-`(t, which = \"semantics\", \"test\")", fillcolor=orange, width="4.4012", pos="719.64,974"];
-	"t~3" [label="t~3 \n[test]", height="0.8171", width="0.87016", pos="719.64,716"];
-	fcall_wN44rE [label="t + 2", fillcolor=orange, width="0.7892", pos="719.64,802"];
-	"t~4" [label="t~4 \n[Q set]", height="0.8171", width="1.0628", pos="719.64,356"];
-	fcall_HLfrN1 [label=round, fillcolor=orange, width="0.92452", pos="719.64,442"];
-	fcall_HSYrID [label=abs, fillcolor=orange, pos="719.64,516"];
-	fcall_iPirFU [label="rnorm\n[Q -> test -> Q -> Q set]", fillcolor=orange, height="0.8171", width="3.0006", pos="719.64,602"];
-	"t~5" [label="t~5 \n[Q]", height="0.8171", pos="398.64,30"];
-	fcall_UVbvIw [label="rnorm\n[any -> any set]", fillcolor=orange, height="0.8171", width="2.0388", pos="398.64,128"];
-	fcall_CBXoje [label="sum\n[any set -> any]", fillcolor=orange, height="0.8171", width="2.0388", pos="719.64,242"];
-	lt_bHUhio [label="any -> any set", width="1.8132", pos="210.64,242"];
-	t -> fcall_od5Qph:center [arrowhead=onormal, dir=forward, weight=1, pos="e,719.64,992.14 719.64,1030.6 719.64,1021.4 719.64,1011.3 719.64,1002.2"];
-	lt_1ZXul6 -> t:center [color=red, dir=forward, weight=1, pos="e,719.64,1089.6 719.64,1127.6 719.64,1119.5 719.64,1109.4 719.64,1099.6"];
-	"t~2" -> fcall_wN44rE:center [arrowhead=onormal, dir=forward, weight=1, pos="e,719.64,820.14 719.64,858.56 719.64,849.39 719.64,839.26 719.64,830.18"];
-	fcall_od5Qph -> "t~2":center [color=red, dir=forward, weight=1, pos="e,719.64,917.63 719.64,955.6 719.64,947.46 719.64,937.43 719.64,927.65"];
-	"t~3" -> fcall_iPirFU:center [arrowhead=onormal, dir=forward, weight=1, label=n, pos="e,719.64,631.5 719.64,686.45 719.64,672.89 719.64,656.48 719.64,641.81", lp="723.14,659"];
-	fcall_wN44rE -> "t~3":center [color=red, dir=forward, weight=1, pos="e,719.64,745.63 719.64,783.6 719.64,775.46 719.64,765.43 719.64,755.65"];
-	"t~4" -> fcall_CBXoje:center [arrowhead=onormal, dir=forward, weight=1, label=x, pos="e,719.64,271.5 719.64,326.45 719.64,312.89 719.64,296.48 719.64,281.81", lp="723.14,299"];
-	fcall_HLfrN1 -> "t~4":center [color=red, dir=forward, weight=1, pos="e,719.64,385.63 719.64,423.6 719.64,415.46 719.64,405.43 719.64,395.65"];
-	fcall_HSYrID -> fcall_HLfrN1:center [arrowhead=onormal, dir=forward, weight=1, pos="e,719.64,460.44 719.64,497.94 719.64,489.81 719.64,479.88 719.64,470.7"];
-	fcall_iPirFU -> fcall_HSYrID:center [arrowhead=onormal, dir=forward, weight=1, pos="e,719.64,534.14 719.64,572.56 719.64,563.39 719.64,553.26 719.64,544.18"];
-	fcall_UVbvIw -> "t~5":center [color=red, dir=forward, weight=1, pos="e,398.64,59.599 398.64,98.457 398.64,89.446 398.64,79.334 398.64,69.736"];
-	fcall_CBXoje -> fcall_UVbvIw:center [arrowhead=onormal, dir=forward, weight=1, label=n, pos="e,452.82,147.91 665.19,222 609.1,202.43 521.75,171.95 462.46,151.27", lp="581.14,185"];
-	lt_bHUhio -> fcall_UVbvIw:center [arrowhead=onormal, dir=forward, weight=1, label=semantics, pos="e,358.6,152.85 236.78,225.43 265.89,208.08 313.6,179.66 349.7,158.16", lp="343.24,185"];
+	graph [bb="0,0,1351.9,1260"];
+	t [label="t \n[Q]", height="0.8171", pos="904.3,1156"];
+	lt_pIlIKe [label=1, pos="904.3,1242"];
+	"t~2" [label="t~2 \n[test]", height="0.8171", width="0.87016", pos="904.3,960"];
+	expr_ZSIVFe [label="`attr<-`(t, which = \"semantics\", \"test\")
+[Q -> ( test )]", fillcolor=orange, height="0.8171", width="4.5121", pos="904.3,1058"];
+	"t~3" [label="t~3 \n[test]", height="0.8171", width="0.87016", pos="904.3,764"];
+	expr_S6jrY3 [label="t + 2
+[test -> ( test )]", fillcolor=orange, height="0.8171", width="1.9551", pos="904.3,862"];
+	"t~4" [label="t~4 \n[Q set]", height="0.8171", width="1.0628", pos="904.3,356"];
+	fcall_WwR39Q [label="round
+[? -> ( Q set )]", fillcolor=orange, height="0.8171", width="1.8928", pos="904.3,454"];
+	fcall_nqQ7YP [label="abs
+[? -> ( Q set )]", fillcolor=orange, height="0.8171", width="1.8928", pos="904.3,552"];
+	fcall_bUHECY [label="rnorm\n[Q -> test -> Q -> Q set]", fillcolor=orange, height="0.8171", width="3.0006", pos="904.3,650"];
+	"t~5" [label="t~5 \n[Q set]", height="0.8171", width="1.0628", pos="497.3,30"];
+	fcall_XnMfJr [label="rnorm\n[Q -> Q -> Q -> Q set: INCONSISTENT!]", fillcolor=orange, height="0.8171", width="5.0124", pos="497.3,128"];
+	fcall_8EIwrP [label="sum\n[Q set -> Q: INCONSISTENT!]", fillcolor=orange, height="0.8171", width="3.8465", pos="904.3,242"];
+	lt_MXVhrB [label="any -> any set", width="1.8132", pos="290.3,242"];
+	t -> expr_ZSIVFe:center [arrowhead=onormal, dir=forward, weight=1, pos="e,904.3,1087.6 904.3,1126.5 904.3,1117.4 904.3,1107.3 904.3,1097.7"];
+	lt_pIlIKe -> t:center [color=red, dir=forward, weight=1, pos="e,904.3,1185.6 904.3,1223.6 904.3,1215.5 904.3,1205.4 904.3,1195.6"];
+	"t~2" -> expr_S6jrY3:center [arrowhead=onormal, dir=forward, weight=1, pos="e,904.3,891.6 904.3,930.46 904.3,921.45 904.3,911.33 904.3,901.74"];
+	expr_ZSIVFe -> "t~2":center [color=red, dir=forward, weight=1, pos="e,904.3,989.6 904.3,1028.5 904.3,1019.4 904.3,1009.3 904.3,999.74"];
+	"t~3" -> fcall_bUHECY:center [arrowhead=onormal, dir=forward, weight=1, label=n, pos="e,904.3,679.5 904.3,734.45 904.3,720.89 904.3,704.48 904.3,689.81", lp="907.8,707"];
+	expr_S6jrY3 -> "t~3":center [color=red, dir=forward, weight=1, pos="e,904.3,793.6 904.3,832.46 904.3,823.45 904.3,813.33 904.3,803.74"];
+	"t~4" -> fcall_8EIwrP:center [arrowhead=onormal, dir=forward, weight=1, label=x, pos="e,904.3,271.5 904.3,326.45 904.3,312.89 904.3,296.48 904.3,281.81", lp="907.8,299"];
+	fcall_WwR39Q -> "t~4":center [color=red, dir=forward, weight=1, pos="e,904.3,385.6 904.3,424.46 904.3,415.45 904.3,405.33 904.3,395.74"];
+	fcall_nqQ7YP -> fcall_WwR39Q:center [arrowhead=onormal, dir=forward, weight=1, pos="e,904.3,483.6 904.3,522.46 904.3,513.45 904.3,503.33 904.3,493.74"];
+	fcall_bUHECY -> fcall_nqQ7YP:center [arrowhead=onormal, dir=forward, weight=1, pos="e,904.3,581.6 904.3,620.46 904.3,611.45 904.3,601.33 904.3,591.74"];
+	fcall_XnMfJr -> "t~5":center [color=red, dir=forward, weight=1, pos="e,497.3,59.599 497.3,98.457 497.3,89.446 497.3,79.334 497.3,69.736"];
+	fcall_8EIwrP -> fcall_XnMfJr:center [arrowhead=onormal, dir=forward, weight=1, label=n, pos="e,586.6,153.57 821.93,218.34 756.84,200.42 665.76,175.36 596.63,156.34", lp="727.8,185"];
+	lt_MXVhrB -> fcall_XnMfJr:center [arrowhead=onormal, dir=forward, weight=1, label=semantics, pos="e,446.64,156.41 318.64,225.66 349.09,209.19 398.36,182.53 437.45,161.38", lp="432.9,185"];
 }
