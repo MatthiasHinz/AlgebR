@@ -1,22 +1,22 @@
 digraph f {
-	graph [bgcolor=transparent, fontcolor=black, ratio=fill, splines=TRUE, rank=same, size="7.30208333333333,5.14583333333333", rankdir=TB];
+	graph [bgcolor=transparent, fontcolor=black, ratio=fill, splines=TRUE, rank=same, size="4.32291666666667,5.14583333333333", rankdir=TB];
 	node [label="\N", shape=ellipse, fixedsize=FALSE, fillcolor=white, style=filled, color=black, fontcolor=black, fontsize=14, height="0.5", width="0.75"];
 	edge [headport=center, style=solid, arrowhead=normal, color=black, dir=none, weight="1.0", fontcolor=black, arrowtail=none, fontsize=14, labelfontsize=11, arrowsize=1, minlen=1];
-	graph [bb="0,0,702,493.8"];
-	t [label="t \n[Q]", height="0.8171", pos="314,382"];
-	lt_F3SoEm [label=123, pos="314,474"];
-	fcall_hXLNV3 [label="log\n[Q -> Q]", fillcolor=orange, height="0.8171", width="1.2781", pos="314,260"];
-	fcall_a6adJE [label="log\n[Q -> Q: INCONSISTENT!]", fillcolor=orange, height="0.8171", width="3.4788", pos="125,260"];
-	lt_Z6gTaB [label="OtherType -> Q", width="2.0323", pos="125,382"];
-	"t~2" [label="t~2 \n[myType]", height="0.8171", width="1.4013", pos="525,155"];
-	expr_47iMv1 [label="`attr<-`(t, \"semantics\", \"myType\")
-[Q -> myType]", fillcolor=orange, height="0.8171", width="4.0888", pos="525,260"];
-	fcall_xWj9ml [label="log\n[myType -> myType: INCONSISTENT!]", fillcolor=orange, height="0.8171", width="4.919", pos="525,32"];
-	t -> fcall_hXLNV3:center [arrowhead=onormal, dir=forward, weight=1, label=x, pos="e,314,289.65 314,352.56 314,336.84 314,317.06 314,299.92", lp="317.5,321"];
-	t -> fcall_a6adJE:center [arrowhead=onormal, dir=forward, weight=1, label=x, pos="e,167.43,287.94 290.82,366.29 262.44,348.27 213.54,317.22 176.18,293.49", lp="234.5,321"];
-	t -> expr_47iMv1:center [arrowhead=onormal, dir=forward, weight=1, pos="e,477.43,288.05 337.79,367.47 369.29,349.56 425.81,317.41 468.54,293.11"];
-	lt_F3SoEm -> t:center [color=red, dir=forward, weight=1, pos="e,314,411.63 314,455.65 314,446.01 314,433.6 314,421.78"];
-	lt_Z6gTaB -> fcall_a6adJE:center [arrowhead=onormal, dir=forward, weight=1, label=semantics, pos="e,125,289.75 125,363.81 125,347.21 125,321.5 125,299.94", lp="152.6,321"];
-	"t~2" -> fcall_xWj9ml:center [arrowhead=onormal, dir=forward, weight=1, label=x, pos="e,525,61.469 525,125.32 525,109.35 525,89.241 525,71.87", lp="528.5,93"];
-	expr_47iMv1 -> "t~2":center [color=red, dir=forward, weight=1, pos="e,525,184.68 525,230.58 525,219.53 525,206.69 525,194.81"];
+	graph [bb="0,0,702,835.18"];
+	t [label="t \n[Q]", height="0.8171", pos="314,646"];
+	lt_6Lph7p [label=123, pos="314,802"];
+	fcall_lA72lk [label="log\n[Q -> Q]", fillcolor=orange, height="0.8171", width="1.2781", pos="314,439"];
+	fcall_KKmSSn [label="log\n[Q -> Q: INCONSISTENT!]", fillcolor=orange, height="0.8171", width="3.4788", pos="125,439"];
+	lt_LnxTYp [label="OtherType -> Q", width="2.0323", pos="125,646"];
+	"t~2" [label="t~2 \n[myType]", height="0.8171", width="1.4013", pos="525,261"];
+	expr_xoOajh [label="`attr<-`(t, \"semantics\", \"myType\")
+[Q -> myType]", fillcolor=orange, height="0.8171", width="4.0888", pos="525,439"];
+	fcall_I3UG0Z [label="log\n[myType -> myType: INCONSISTENT!]", fillcolor=orange, height="0.8171", width="4.919", pos="525,54"];
+	t -> fcall_lA72lk:center [arrowhead=onormal, dir=forward, weight=1, label=x, pos="e,314,468.59 314,616.5 314,580.64 314,518.93 314,478.8", lp="317.5,543"];
+	t -> fcall_KKmSSn:center [arrowhead=onormal, dir=forward, weight=1, label=x, pos="e,150.92,468.11 295.19,624.59 263.13,589.82 197.52,518.66 157.78,475.56", lp="229.5,543"];
+	t -> expr_xoOajh:center [arrowhead=onormal, dir=forward, weight=1, pos="e,496.04,468.14 333.85,625.71 369.32,591.25 444.05,518.64 488.85,475.13"];
+	lt_6Lph7p -> t:center [color=red, dir=forward, weight=1, pos="e,314,675.66 314,783.93 314,760.43 314,717.44 314,685.88"];
+	lt_LnxTYp -> fcall_KKmSSn:center [arrowhead=onormal, dir=forward, weight=1, label=semantics, pos="e,125,468.53 125,627.87 125,595.27 125,523.54 125,478.75", lp="152.6,543"];
+	"t~2" -> fcall_I3UG0Z:center [arrowhead=onormal, dir=forward, weight=1, label=x, pos="e,525,83.592 525,231.5 525,195.64 525,133.93 525,93.799", lp="528.5,158"];
+	expr_xoOajh -> "t~2":center [color=red, dir=forward, weight=1, pos="e,525,290.66 525,409.33 525,379.8 525,333.58 525,300.79"];
 }

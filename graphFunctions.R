@@ -73,14 +73,14 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
     algebr$new_ls = ls(envir = globalenv())
     
     #notify and track new variables
-    new_vars = algebr$new_ls[!algebr$new_ls %in% algebr$last_ls]
-   # if(length(new_vars)>0)
-   #   cat(paste("The following variables have been initialized: ", paste(new_vars, collapse = " "),"\n"))
-    
-    ls(envir = globalenv())[ls() %in% algebr$ls_last]
-    
-    info = scriptInfo(readScript(txt=as.character(as.expression(expr))))
-    side_effects = new_vars[!new_vars %in% info[[1]]@outputs]
+   #  new_vars = algebr$new_ls[!algebr$new_ls %in% algebr$last_ls]
+   # # if(length(new_vars)>0)
+   # #   cat(paste("The following variables have been initialized: ", paste(new_vars, collapse = " "),"\n"))
+   #  
+   #  ls(envir = globalenv())[ls() %in% algebr$ls_last]
+   #  
+   #  info = scriptInfo(readScript(txt=as.character(as.expression(expr))))
+   #  side_effects = new_vars[!new_vars %in% info[[1]]@outputs]
     
     ##save last captured call sementics to temporary call stack
     
@@ -89,24 +89,41 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
       algebr$tempCallStack <- subset(algebr$callStack, rec_num == algebr$rec_num) ##TODO: Review counting re_num (as mentioned above)
      }
     
+    info = scriptInfo(readScript(txt=as.character(as.expression(expr))))
+    side_effects = c()
+    lapply(algebr$new_ls, function(var){
+      vare = algebr$enquote(var)
+      obj=eval(parse(text=vare), envir = globalenv())
+      if(!isTRUE(attr(obj,"isTracked")) && !(var %in% info[[1]]@outputs)){
+        side_effects <<- append(side_effects, var)
+      }else
+        return(invisible())
+    });side_effects
+    
     #------------------------------------------------------------------------------------
     # Parse available provenance information to enhance the derivation graph
     #------------------------------------------------------------------------------------
     
     # actually parsing the last executed expression to a graph:
     algebr$scriptGraph=algebr$parseCommand(expr,algebr$scriptGraph, first_call = TRUE)
-    
 
-    if(length(side_effects)>0){
-      cmd_id = algebr$scriptGraph$first_call
-      sapply(side_effects, function(variable){
-        algebr$scriptGraph <<- algebr$addNodeObject(var = variable, g = algebr$scriptGraph, isOutput = TRUE)
-        algebr$scriptGraph <<- algebr$addEdgeOutput(output =  variable,cmd = cmd_id,g = algebr$scriptGraph, hidden = TRUE)
+
+
+    cmd_id = algebr$scriptGraph$first_call
+    sapply(side_effects, function(variable){
+      algebr$scriptGraph <<- algebr$addNodeObject(var = variable, g = algebr$scriptGraph, isOutput = TRUE)
+      algebr$scriptGraph <<- algebr$addEdgeOutput(output =  variable,cmd = cmd_id,g = algebr$scriptGraph, hidden = TRUE)
+      
+      obj=eval(parse(text=algebr$enquote(variable)), envir = globalenv())
+      if(!isTRUE(attr(obj, "isTracked"))){
+        attr(obj, "isTracked") <-TRUE
+        assign(variable, obj,envir = globalenv())
       }
-        
-      )
-    # warning(paste("These variables have been initialized from side-efects of the previous task: ", paste(side_effects, collapse = " ")))
-    }
+    })
+    
+     #if(length(side_effects)>0)
+     # warning(paste("These variables have been initialized from side-efects of the previous task: ", paste(side_effects, collapse = " ")))
+    
     
     #estimates semantics of functions and expressions that are not explicitely stated
    algebr$scriptGraph=algebr$estimateMissingSemantics(algebr$scriptGraph)
@@ -118,6 +135,15 @@ algebr$provenanceCallback <- function(algebr_env = algebr) {
     # So please don't move it!
     algebr$last_ls = algebr$new_ls
     algebr$rec_num = algebr$rec_num+1 #record number
+    
+    ## for debugging
+    # tst = function(){
+    #   sapply(ls(envir = globalenv()),function(var){
+    #     obj=eval(parse(text=algebr$enquote(var)), envir = globalenv())
+    #     return(isTRUE(attr(obj, "isTracked")))
+    #   })}
+    # 
+    # print(tst())
     return(TRUE)
   }
 }
@@ -151,14 +177,13 @@ algebr$enableProvenance <- function(){
   
    algebr$last_ls = ls(envir = globalenv())
    
-  # for(variable_str in algebr$last_ls){
-  #   #variable = get(variable_str)
-  #   isTracked=eval(parse(text=paste0("attr(",variable_str,", \"isTracked\")")), envir=globalenv())
-  #   
-  #   if(!isTRUE(isTracked)){
-  #     isTracked=eval(parse(text=paste0("attr(",variable_str,", \"isTracked\") <- FALSE")), envir=globalenv())
-  #   }
-  # }
+   for(var in algebr$last_ls){
+     obj=eval(parse(text=algebr$enquote(var)), envir = globalenv())
+     if(!isTRUE(attr(obj, "isTracked"))){
+       attr(obj, "isTracked") <-TRUE
+       assign(var, obj,envir = globalenv())
+     }
+   }
   invisible()
 }
 
@@ -313,8 +338,19 @@ algebr$instance <- function(var, pos=0, forInput=FALSE){
 #'
 #' @examples
 algebr$addNewVersionRecord <- function(var){
-  #print(paste("new Version record",var))
+ # print(paste("new version record",var))
   var=as.character(as.expression(var))
+  #print(var)
+  
+  var_e = parse(text=algebr$enquote(var))[[1]]
+  if(is.name(var_e)){
+    obj=eval(var_e, envir = globalenv())
+    if(!isTRUE(attr(obj, "isTracked"))){
+      attr(obj, "isTracked") <-TRUE
+      assign(var, obj,envir = globalenv())
+     # print(paste("Start tracking variable",var))
+    }
+  }
 
  # print(paste("Version update of", var))
   if(is.null(algebr$version_history[[var]]))
@@ -1327,10 +1363,20 @@ getSemanticPedigree <- function(var, attr="ALL"){
 ####
 
 algebr$unquote = function(str){
-  if(str_detect(str,"^`.*`\\Z"))
+  if(str_detect(str,"^`.*`$"))
      return(str_sub(str, 2,-2))
   else
     return(str)
+}
+
+
+algebr$enquote = function(str){
+  if(!str_detect(str,"^`.*`$") && str_detect(str,".*<-")){
+    str=paste0("`",str,"`")
+    return(str)
+  }else{
+    return(str)
+  }
 }
 
 
@@ -1470,7 +1516,7 @@ algebr$estimateMissingSemantics = function(g){
       })
       
       if(is.na(attr)){
-        obj=eval(parse(text=var),envir = globalenv())
+        obj=eval(parse(text=algebr$enquote(var)),envir = globalenv())
 
         
         obj=addSemanticPedigree(var = obj, name = name, procedure = exp$semantics, result_semantics = out_sem)
@@ -1478,7 +1524,7 @@ algebr$estimateMissingSemantics = function(g){
         #print(paste0("Assigninged semantic pedigree to ",var))
       }else{
         #find parent var
-        parent_var = parse(text = var)[[1]][[2]]
+        parent_var = parse(text = algebr$enquote(var))[[1]][[2]]
         obj=eval(parent_var,envir = globalenv())
         obj=addSemanticPedigree(var = obj, attr = attr ,name = name, procedure = exp$semantics, result_semantics = out_sem)
         assign(deparse(parent_var), obj, envir = globalenv())

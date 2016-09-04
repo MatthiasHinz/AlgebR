@@ -7,10 +7,11 @@ library(gstat)
 library(mss)
 
 #----------------------------------------------------
-if(TRUE){
+if(FALSE){
   rm(list=ls()) #make sure to start from a clean workspace
 }
 source("graphFunctions.R")
+
 
 # Initialize provenance tracking
 
@@ -76,6 +77,9 @@ captureSemantics(SFieldData,  procedureName = "SFieldData",
     return(output)
   }
 ) <- TRUE
+
+
+
 
 
 algebr$enableProvenance()
