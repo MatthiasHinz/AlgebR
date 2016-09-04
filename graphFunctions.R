@@ -1633,19 +1633,24 @@ algebr$findAttr = function(exp){
         attrN = NA
       }
     } else if (expl[[1]] == "[") {
-      if(is.numeric(expl[[3]])){
-        str = paste0("names(", deparse(expl[[2]]), "[", expl[[3]], "])")
+      if(length(expl)==4){
+        par= expl[[4]]
+      }else
+        par= expl[[3]]
+      
+      if(is.numeric(par)){
+        str = paste0("names(", deparse(expl[[2]]), "[", par, "])")
         attrN = eval(parse(text = str), envir = globalenv())
-      }else if(is.character(expl[[3]])){
-        attrN = expl[[3]]
+      }else if(is.character(par)){
+        attrN = par
       }else 
-        if(algebr$containsOnlyPrimitives(expl[[3]])){
-          pval = eval(expl[[3]], envir = globalenv())
+        if(algebr$containsOnlyPrimitives(par)){
+          pval = eval(par, envir = globalenv())
           if(is.character(pval)){
             #character selector of multiple columns
             attrN = pval
           }else if(is.numeric(pval) || is.logical(pval)){
-            str = paste0("names(", deparse(expl[[2]]), "[", deparse(expl[[3]]), "])")
+            str = paste0("names(", deparse(expl[[2]]), "[", deparse(par), "])")
             attrN = eval(parse(text = str), envir = globalenv())
           }
         }
